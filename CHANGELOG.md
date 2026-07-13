@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   so the rigging stays hidden until the truth screen is revealed.
 
 ### Changed
+- Moved the in-game scoreboard into a sticky right-hand sidebar (two-column
+  casino layout), stacking below the game on narrow screens.
 - The odd/even guess selection now clears after each roll, so the player must
   consciously re-pick a guess every round.
 - Reaching ₱0 balance no longer auto-reveals the truth screen; the player is
