@@ -282,6 +282,44 @@
   .sparkline-label{ font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ivory-dim); }
   #sparkline{ width:100%; height:100px; margin-top:8px; }
 
+  /* ---------- in-game scoreboard ---------- */
+  .scoreboard-wrap{ margin-top:26px; }
+  .scoreboard-label{
+    font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--ivory-dim); text-align:center; margin:0 0 10px;
+  }
+  .scoreboard{
+    background:rgba(0,0,0,.22);
+    border:1px solid rgba(232,185,74,.22);
+    border-radius:12px;
+    overflow:hidden;
+  }
+  .scoreboard-scroll{ max-height:240px; overflow-y:auto; }
+  .scoreboard table{
+    width:100%; border-collapse:collapse;
+    font-family:'IBM Plex Mono',monospace; font-size:12px;
+  }
+  .scoreboard th, .scoreboard td{
+    padding:8px 10px; text-align:center;
+    border-bottom:1px solid rgba(232,185,74,.12);
+  }
+  .scoreboard thead th{
+    position:sticky; top:0;
+    background:var(--felt);
+    color:var(--gold-bright);
+    font-size:10.5px; letter-spacing:.08em; text-transform:uppercase;
+    font-weight:600;
+  }
+  .scoreboard tbody td{ color:var(--ivory); }
+  .scoreboard tbody tr:last-child td{ border-bottom:none; }
+  .scoreboard td.win{ color:var(--win); font-weight:600; }
+  .scoreboard td.lose{ color:var(--loss); font-weight:600; }
+  .scoreboard-empty{
+    text-align:center; padding:18px 10px;
+    font-family:'IBM Plex Mono',monospace; font-size:12px;
+    color:var(--ivory-dim);
+  }
+
   .instructor-toggle{
     display:flex; align-items:center; gap:8px;
     justify-content:center;
@@ -499,6 +537,22 @@
       <button class="roll-btn" id="rollBtn" disabled>ROLL THE DICE</button>
     </div>
 
+    <div class="scoreboard-wrap">
+      <p class="scoreboard-label">Scoreboard — your previous rounds</p>
+      <div class="scoreboard">
+        <div class="scoreboard-scroll">
+          <table id="scoreboardTable">
+            <thead>
+              <tr><th>#</th><th>Guess</th><th>Roll</th><th>Result</th><th>Bet</th></tr>
+            </thead>
+            <tbody id="scoreboardBody">
+              <tr><td class="scoreboard-empty" colspan="5">No rounds played yet — place a bet and roll.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <div class="sparkline-wrap">
       <span class="sparkline-label">Your balance over time</span>
       <canvas id="sparkline" width="600" height="100"></canvas>
@@ -606,7 +660,6 @@
   var GRIND_START_PROB = 0.30;
   var DECAY_PER_ROUND = 0.045;
   var FLOOR_PROB = 0.08;
-  var AUTO_REVEAL_ROUND = 14;
   var NEW_PLAYER_LIMIT = 1000;
 
   function formatPeso(n){
@@ -663,6 +716,7 @@
   var casinoStage = document.getElementById('casinoStage');
   var truthStage = document.getElementById('truthStage');
   var ledgerBody = document.getElementById('ledgerBody');
+  var scoreboardBody = document.getElementById('scoreboardBody');
   var probChart = document.getElementById('probChart');
   var resetBtn = document.getElementById('resetBtn');
   var betNote = document.getElementById('betNote');
@@ -824,22 +878,42 @@
     balanceValue.textContent = formatPeso(state.balance);
     roundValue.textContent = state.round;
 
+    // clear the odd/even guess so the player must consciously choose again
+    state.guess = null;
+    guessOdd.classList.remove('active');
+    guessEven.classList.remove('active');
+
+    updateScoreboard();
     drawSparkline();
     updateInstructorPanel();
     updateOperatorStatus();
 
     if (state.balance <= 0){
-      state.over = true;
-      resultLine.textContent += ' — you\'re out of pesos.';
-      setTimeout(revealTruth, 900);
-      return;
-    }
-    if (state.round >= AUTO_REVEAL_ROUND){
-      state.over = true;
-      setTimeout(revealTruth, 900);
-      return;
+      // no pesos left to bet — but the game only ends when the player chooses to stop
+      resultLine.textContent += ' — you\'re out of pesos. Click "I want to stop" below to see how this worked.';
     }
     refreshBetLocks();
+  }
+
+  // ---------- in-game scoreboard (no true odds shown) ----------
+  function updateScoreboard(){
+    if (state.history.length === 0){
+      scoreboardBody.innerHTML =
+        '<tr><td class="scoreboard-empty" colspan="5">No rounds played yet — place a bet and roll.</td></tr>';
+      return;
+    }
+    scoreboardBody.innerHTML = '';
+    // newest round first so the latest result is always in view
+    state.history.slice().reverse().forEach(function(h){
+      var tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td>' + h.round + '</td>' +
+        '<td>' + h.guess.toUpperCase() + '</td>' +
+        '<td>' + h.d1 + '+' + h.d2 + '=' + h.sum + '</td>' +
+        '<td class="' + (h.win ? 'win' : 'lose') + '">' + (h.win ? 'WIN' : 'LOSE') + '</td>' +
+        '<td>' + formatPeso(h.bet) + '</td>';
+      scoreboardBody.appendChild(tr);
+    });
   }
 
   // ---------- sparkline ----------
@@ -978,6 +1052,7 @@
     truthStage.classList.add('hidden');
     casinoStage.classList.remove('hidden');
     refreshBetLocks();
+    updateScoreboard();
     drawSparkline();
     updateInstructorPanel();
     updateOperatorStatus();
