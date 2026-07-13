@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- "Pity" comeback rigging: each consecutive loss nudges the next roll's win
+  probability up by 4% (stacking, capped at +20%), and any win snaps the odds
+  straight back to the brutal grind rate. Total win probability is clamped at
+  95% so a win is never guaranteed. Instructor mode's "true win prob" reflects
+  the live pity bonus and annotates it (e.g. `(+12% pity)`) — the near-miss
+  "you're due" manipulation, exposed. Implemented as `effectiveProb` wrapping
+  the base `computeProb`, with the effective odds recorded in the round history.
+
 - Starting-balance prompt shown before every game: a casino-styled modal asks
   the player how much they're playing with, and their answer becomes the opening
   stack. "Play again" / operator reset re-opens the prompt so each session starts
