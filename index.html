@@ -609,6 +609,173 @@
     80%{ opacity:1; }
     100%{ opacity:0; }
   }
+
+  /* ---------- MODALS (balance prompt + bonus round) ---------- */
+  .modal-overlay{
+    position:fixed; inset:0;
+    z-index:2300;
+    display:flex; align-items:center; justify-content:center;
+    padding:24px;
+    background:radial-gradient(circle at 50% 30%, rgba(18,59,42,.75), rgba(4,12,9,.9) 80%);
+    backdrop-filter:blur(6px);
+    -webkit-backdrop-filter:blur(6px);
+  }
+  .modal-overlay.hidden{ display:none !important; }
+  .modal-card{
+    position:relative;
+    width:100%; max-width:420px;
+    background:radial-gradient(circle at 50% -10%, var(--felt-light), var(--felt) 72%);
+    border:1px solid rgba(232,185,74,.4);
+    border-radius:20px;
+    padding:34px 28px 30px;
+    text-align:center;
+    box-shadow:inset 0 0 60px rgba(0,0,0,.4), 0 24px 60px rgba(0,0,0,.6);
+    animation:modalPop .45s cubic-bezier(.2,.8,.25,1);
+  }
+  @keyframes modalPop{
+    0%{ opacity:0; transform:translateY(14px) scale(.92); }
+    100%{ opacity:1; transform:translateY(0) scale(1); }
+  }
+  .modal-eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--gold); margin:0 0 12px;
+  }
+  .modal-card h2{
+    font-family:'Fraunces',serif; font-weight:700;
+    font-size:clamp(26px,7vw,36px);
+    color:var(--gold-bright);
+    margin:0 0 10px;
+    text-shadow:0 0 20px rgba(232,185,74,.35);
+  }
+  .modal-card p.modal-body{
+    font-size:14px; line-height:1.55;
+    color:var(--ivory-dim);
+    margin:0 auto 22px; max-width:320px;
+  }
+  .modal-balance-field{
+    display:flex; align-items:center; justify-content:center;
+    gap:8px; margin:0 auto 8px; max-width:260px;
+  }
+  .modal-peso{
+    font-family:'IBM Plex Mono',monospace; font-weight:700;
+    font-size:26px; color:var(--gold-bright);
+  }
+  .modal-balance-input{
+    flex:1; min-width:0;
+    padding:12px 14px;
+    border-radius:12px;
+    border:2px solid rgba(232,185,74,.5);
+    background:var(--felt-dark);
+    color:var(--ivory);
+    font-family:'IBM Plex Mono',monospace;
+    font-weight:600; font-size:20px;
+    text-align:center;
+  }
+  .modal-balance-input:focus{ outline:none; border-color:var(--gold); }
+  .modal-balance-input::placeholder{ color:var(--ivory-dim); opacity:.55; }
+  .modal-warning{
+    font-family:'IBM Plex Mono',monospace; font-size:11px;
+    color:var(--loss); min-height:14px; margin:0 0 16px;
+  }
+  .modal-btn{
+    display:block; width:100%;
+    padding:15px 0; border:none; border-radius:12px;
+    background:linear-gradient(180deg, var(--gold-bright), var(--gold));
+    color:var(--felt-dark);
+    font-weight:700; font-size:15px; letter-spacing:.08em;
+    box-shadow:0 8px 20px rgba(232,185,74,.3);
+  }
+  .modal-btn:not(:disabled):hover{ filter:brightness(1.06); }
+  .modal-fineprint{
+    font-family:'IBM Plex Mono',monospace; font-size:10.5px;
+    color:var(--ivory-dim); opacity:.7;
+    margin:16px 0 0; line-height:1.4;
+  }
+
+  /* ---- flashy bonus round variant ---- */
+  .modal-card.bonus{
+    border-color:transparent;
+    background:
+      linear-gradient(var(--felt), var(--felt)) padding-box,
+      conic-gradient(from 0deg, var(--gold-bright), #ff6b62, var(--gold), var(--win), var(--gold-bright)) border-box;
+    border:3px solid transparent;
+    box-shadow:inset 0 0 70px rgba(0,0,0,.4), 0 0 46px rgba(232,185,74,.5), 0 24px 60px rgba(0,0,0,.6);
+    overflow:hidden;
+  }
+  .modal-card.bonus::before{
+    content:""; position:absolute; inset:0;
+    background-image:repeating-conic-gradient(from 0deg at 50% 0%, rgba(245,214,124,.14) 0deg 6deg, transparent 6deg 18deg);
+    pointer-events:none;
+    animation:bonusRays 14s linear infinite;
+  }
+  @keyframes bonusRays{ to{ transform:rotate(360deg); } }
+  .modal-card.bonus > *{ position:relative; z-index:1; }
+  .bonus-stars{
+    font-size:30px; letter-spacing:.15em;
+    margin:0 0 6px;
+    animation:bonusStars 1.4s ease-in-out infinite;
+  }
+  @keyframes bonusStars{
+    0%,100%{ transform:scale(1); filter:drop-shadow(0 0 6px rgba(245,214,124,.5)); }
+    50%{ transform:scale(1.12); filter:drop-shadow(0 0 16px rgba(245,214,124,.9)); }
+  }
+  .modal-card.bonus h2{
+    font-size:clamp(30px,8vw,44px);
+    animation:bonusGlow 1.6s ease-in-out infinite;
+  }
+  @keyframes bonusGlow{
+    0%,100%{ text-shadow:0 0 8px #fff, 0 0 22px var(--gold-bright), 0 0 44px var(--gold); }
+    50%{ text-shadow:0 0 12px #fff, 0 0 34px var(--gold-bright), 0 0 70px var(--gold); }
+  }
+  .bonus-multiplier{
+    font-family:'Fraunces',serif; font-weight:700;
+    font-size:clamp(52px,16vw,84px);
+    line-height:1;
+    color:#fff;
+    margin:6px 0 4px;
+    text-shadow:0 0 10px #fff, 0 0 26px var(--gold-bright), 0 0 50px var(--gold), 0 0 90px var(--win);
+    animation:bonusPulse 1.2s ease-in-out infinite;
+  }
+  @keyframes bonusPulse{
+    0%,100%{ transform:scale(1) rotate(-2deg); }
+    50%{ transform:scale(1.08) rotate(2deg); }
+  }
+  .bonus-tagline{
+    font-family:'Fraunces',serif; font-style:italic; font-weight:500;
+    font-size:16px; color:var(--gold-bright); margin:0 0 20px;
+  }
+  .modal-card.bonus .modal-btn{
+    animation:bonusBtn 1.4s ease-in-out infinite;
+  }
+  @keyframes bonusBtn{
+    0%,100%{ box-shadow:0 8px 20px rgba(232,185,74,.35); }
+    50%{ box-shadow:0 8px 30px rgba(245,214,124,.75); }
+  }
+
+  /* pending-bonus badge in the bet area */
+  .bonus-badge{
+    display:inline-flex; align-items:center; gap:6px;
+    margin:0 auto 12px;
+    padding:7px 16px; border-radius:999px;
+    background:linear-gradient(90deg, rgba(245,214,124,.18), rgba(127,191,143,.18));
+    border:1px solid rgba(245,214,124,.6);
+    font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:12px;
+    letter-spacing:.06em; color:var(--gold-bright);
+    text-shadow:0 0 10px rgba(245,214,124,.5);
+    animation:bonusBadgePulse 1.4s ease-in-out infinite;
+  }
+  @keyframes bonusBadgePulse{
+    0%,100%{ box-shadow:0 0 0 rgba(245,214,124,0); }
+    50%{ box-shadow:0 0 18px rgba(245,214,124,.5); }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .modal-card,
+    .modal-card.bonus::before,
+    .bonus-stars, .modal-card.bonus h2, .bonus-multiplier,
+    .modal-card.bonus .modal-btn, .bonus-badge{ animation:none; }
+  }
 </style>
 </head>
 <body>
@@ -616,6 +783,37 @@
 <div class="celebration" id="celebration" aria-hidden="true">
   <p class="banner-text" id="celebrationText"></p>
 </div>
+
+<!-- ============ STARTING-BALANCE PROMPT ============ -->
+<div class="modal-overlay" id="balanceModal" role="dialog" aria-modal="true" aria-labelledby="balanceModalTitle">
+  <div class="modal-card">
+    <p class="modal-eyebrow">Welcome to the table</p>
+    <h2 id="balanceModalTitle">Lucky Parity</h2>
+    <p class="modal-body">Before you sit down — how much are you playing with today? Enter your current balance to begin.</p>
+    <div class="modal-balance-field">
+      <span class="modal-peso">₱</span>
+      <input type="number" class="modal-balance-input" id="startBalanceInput" placeholder="5,000" min="1" step="1" inputmode="numeric" autocomplete="off">
+    </div>
+    <p class="modal-warning" id="balanceModalWarning"></p>
+    <button class="modal-btn" id="startGameBtn" disabled>TAKE A SEAT</button>
+    <p class="modal-fineprint">Classroom demonstration — no real money is used. Every peso here is pretend.</p>
+  </div>
+</div>
+
+<!-- ============ BONUS-ROUND DIALOG ============ -->
+<div class="modal-overlay hidden" id="bonusModal" role="dialog" aria-modal="true" aria-labelledby="bonusModalTitle">
+  <div class="modal-card bonus">
+    <p class="bonus-stars">⭐ 🎰 ⭐</p>
+    <p class="modal-eyebrow">Round 4 · Special event</p>
+    <h2 id="bonusModalTitle">BONUS ROUND!</h2>
+    <p class="bonus-multiplier">2×</p>
+    <p class="bonus-tagline">Your winnings are DOUBLED this round</p>
+    <p class="modal-body">You're on a roll — so this one pays double. Bet up to <strong>₱1,000</strong> and cash in big. Don't let it slip away!</p>
+    <button class="modal-btn" id="bonusStartBtn">LET'S GO 🎲</button>
+    <p class="modal-fineprint">This is exactly the "bonus" hook real gambling apps use to raise your bet. The reveal at the end shows why.</p>
+  </div>
+</div>
+
 <div id="app">
 
   <!-- ============ CASINO MODE ============ -->
@@ -654,12 +852,16 @@
       </div>
       <p class="result-line" id="resultLine">Pick a bet size and a guess to begin.</p>
 
+      <div style="text-align:center;">
+        <span class="bonus-badge hidden" id="bonusBadge">⭐ BONUS ROUND — winnings ×2!</span>
+      </div>
+
       <div class="bet-row">
         <span class="bet-label">Bet</span>
         <div class="chip-select" id="chipSelect">
+          <button class="chip" data-amt="100">₱100</button>
+          <button class="chip" data-amt="500">₱500</button>
           <button class="chip" data-amt="1000">₱1,000</button>
-          <button class="chip" data-amt="10000">₱10,000</button>
-          <button class="chip" data-amt="100000">₱100,000</button>
         </div>
         <input type="number" class="custom-bet-input" id="customBet" placeholder="Custom ₱ amount" min="1" step="1" inputmode="numeric">
       </div>
@@ -733,15 +935,11 @@
 
     <div class="explain-grid">
       <div class="explain-card">
-        <h4>01 — THE HOOK</h4>
-        <p>For the first several rounds, your odds of winning were secretly set to around 80%, no matter what you guessed. That's not luck — that's a game built to earn your trust fast.</p>
-      </div>
-      <div class="explain-card">
-        <h4>02 — THE GRIND</h4>
+        <h4>01 — THE GRIND</h4>
         <p>Once you were a few rounds in, the true odds quietly dropped — sometimes below 20% — while the dice still looked perfectly fair. This is what a hidden house edge feels like from the inside.</p>
       </div>
       <div class="explain-card">
-        <h4>03 — WHY IT WORKS</h4>
+        <h4>02 — WHY IT WORKS</h4>
         <p>Early wins build false confidence. Near-misses and streaks trigger the same reward chemistry as real wins. And once you've lost some money, it feels natural to think "I'm due" — that's the sunk-cost trap, and it's designed on purpose.</p>
       </div>
     </div>
@@ -895,13 +1093,16 @@
   }
 
   // ---------- game config ----------
-  var START_BALANCE = 100000;
+  var DEFAULT_BALANCE = 5000;
+  var START_BALANCE = DEFAULT_BALANCE; // set from the player's own answer at the prompt
   var HOOK_ROUNDS = 4;
   var HOOK_PROB = 0.82;
   var GRIND_START_PROB = 0.30;
   var DECAY_PER_ROUND = 0.045;
   var FLOOR_PROB = 0.08;
   var NEW_PLAYER_LIMIT = 1000;
+  var BONUS_ROUND = 4;        // the 4th round is a "bonus" round
+  var BONUS_MULTIPLIER = 2;   // winnings are doubled that round
 
   function formatPeso(n){
     return '₱' + Math.round(n).toLocaleString('en-PH');
@@ -966,6 +1167,13 @@
   var operatorStatus = document.getElementById('operatorStatus');
   var startRiggingBtn = document.getElementById('startRiggingBtn');
   var operatorResetBtn = document.getElementById('operatorResetBtn');
+  var balanceModal = document.getElementById('balanceModal');
+  var startBalanceInput = document.getElementById('startBalanceInput');
+  var balanceModalWarning = document.getElementById('balanceModalWarning');
+  var startGameBtn = document.getElementById('startGameBtn');
+  var bonusModal = document.getElementById('bonusModal');
+  var bonusStartBtn = document.getElementById('bonusStartBtn');
+  var bonusBadge = document.getElementById('bonusBadge');
 
   setDieFace(die1, 1);
   setDieFace(die2, 1);
@@ -1104,16 +1312,20 @@
     setDieFace(die2, d2);
 
     var bet = state.bet;
-    if (win) state.balance += bet;
+    var isBonus = state.round === BONUS_ROUND;
+    var payout = isBonus ? bet * BONUS_MULTIPLIER : bet;
+    if (win) state.balance += payout;
     else state.balance -= bet;
     if (state.balance < 0) state.balance = 0;
 
     state.history.push({
       round: state.round, guess: state.guess, d1: d1, d2: d2, sum: sum,
-      parity: parity, win: win, bet: bet, trueProb: prob, balanceAfter: state.balance
+      parity: parity, win: win, bet: bet, bonus: isBonus, trueProb: prob, balanceAfter: state.balance
     });
 
-    resultLine.textContent = d1 + ' + ' + d2 + ' = ' + sum + ' (' + parity.toUpperCase() + ') — you ' + (win ? 'won' : 'lost') + ' ' + formatPeso(bet);
+    resultLine.textContent = d1 + ' + ' + d2 + ' = ' + sum + ' (' + parity.toUpperCase() + ') — you ' +
+      (win ? 'won ' + formatPeso(payout) + (isBonus ? ' (2× bonus!)' : '')
+           : 'lost ' + formatPeso(bet));
     resultLine.classList.add(win ? 'win' : 'lose');
     celebrate(win, document.querySelector('.table-felt'));
 
@@ -1135,7 +1347,28 @@
       resultLine.textContent += ' — you\'re out of pesos. Click "I want to stop" below to see how this worked.';
     }
     refreshBetLocks();
+    updateBonusIndicator();
+
+    // once round 3 is done, hype up the round-4 "bonus" (the classic raise-your-bet hook).
+    // brief delay so the round-3 result lands before the pop-up takes over.
+    if (state.round === BONUS_ROUND - 1 && state.balance > 0 && !state.over){
+      setTimeout(showBonusModal, 900);
+    }
   }
+
+  // ---------- bonus round dialog + badge ----------
+  function updateBonusIndicator(){
+    var nextRound = state.round + 1;
+    var pending = nextRound === BONUS_ROUND && !state.over && state.balance > 0;
+    bonusBadge.classList.toggle('hidden', !pending);
+  }
+
+  function showBonusModal(){
+    bonusModal.classList.remove('hidden');
+  }
+  bonusStartBtn.addEventListener('click', function(){
+    bonusModal.classList.add('hidden');
+  });
 
   // ---------- in-game scoreboard (no true odds shown) ----------
   function updateScoreboard(){
@@ -1153,7 +1386,7 @@
         '<td>' + h.guess.toUpperCase() + '</td>' +
         '<td>' + h.d1 + '+' + h.d2 + '=' + h.sum + '</td>' +
         '<td class="' + (h.win ? 'win' : 'lose') + '">' + (h.win ? 'WIN' : 'LOSE') + '</td>' +
-        '<td>' + formatPeso(h.bet) + '</td>';
+        '<td>' + formatPeso(h.bet) + (h.bonus ? ' <span title="bonus round — winnings doubled">⭐×2</span>' : '') + '</td>';
       scoreboardBody.appendChild(tr);
     });
   }
@@ -1209,7 +1442,7 @@
         '<td>' + h.guess.toUpperCase() + '</td>' +
         '<td>' + h.d1 + '+' + h.d2 + '=' + h.sum + '</td>' +
         '<td class="' + (h.win ? 'win' : 'lose') + '">' + (h.win ? 'WIN' : 'LOSE') + '</td>' +
-        '<td>' + formatPeso(h.bet) + '</td>' +
+        '<td>' + formatPeso(h.bet) + (h.bonus ? ' ⭐×2' : '') + '</td>' +
         '<td>' + Math.round(h.trueProb * 100) + '%</td>';
       ledgerBody.appendChild(tr);
     });
@@ -1293,14 +1526,27 @@
     document.body.classList.remove('truth-active');
     truthStage.classList.add('hidden');
     casinoStage.classList.remove('hidden');
+    bonusModal.classList.add('hidden');
     refreshBetLocks();
     updateScoreboard();
+    updateBonusIndicator();
     drawSparkline();
     updateInstructorPanel();
     updateOperatorStatus();
     window.scrollTo({top: 0, behavior: 'smooth'});
   }
-  resetBtn.addEventListener('click', resetGame);
+
+  // "Play again" clears the table and re-asks the starting balance —
+  // a fresh game always begins by asking what you're playing with.
+  function restartGame(){
+    resetGame();
+    startBalanceInput.value = '';
+    startGameBtn.disabled = true;
+    balanceModalWarning.textContent = '';
+    balanceModal.classList.remove('hidden');
+    try { startBalanceInput.focus(); } catch (e) {}
+  }
+  resetBtn.addEventListener('click', restartGame);
 
   // ---------- hidden operator controls (booth staff only) ----------
   operatorDot.addEventListener('click', function(){
@@ -1318,13 +1564,38 @@
     setTimeout(function(){ startRiggingBtn.textContent = original; }, 1500);
   }
   startRiggingBtn.addEventListener('click', startRiggingNow);
-  operatorResetBtn.addEventListener('click', resetGame);
+  operatorResetBtn.addEventListener('click', restartGame);
 
-  // initial paint
+  // ---------- starting-balance prompt (shown before every game) ----------
+  function readStartBalance(){
+    var v = parseInt(startBalanceInput.value, 10);
+    return (!isNaN(v) && v > 0) ? v : null;
+  }
+  startBalanceInput.addEventListener('input', function(){
+    var v = readStartBalance();
+    startGameBtn.disabled = v === null;
+    balanceModalWarning.textContent =
+      (startBalanceInput.value.trim() !== '' && v === null) ? 'Enter a balance greater than ₱0.' : '';
+  });
+  startBalanceInput.addEventListener('keydown', function(e){
+    if (e.key === 'Enter' && !startGameBtn.disabled) startGame();
+  });
+  function startGame(){
+    var v = readStartBalance();
+    if (v === null) return;
+    START_BALANCE = v;      // the player's own answer becomes the starting stack
+    balanceModal.classList.add('hidden');
+    resetGame();            // rebuild fresh state around the chosen balance
+  }
+  startGameBtn.addEventListener('click', startGame);
+
+  // initial paint (behind the balance prompt until the player takes a seat)
   balanceValue.textContent = formatPeso(state.balance);
   refreshBetLocks();
+  updateBonusIndicator();
   updateOperatorStatus();
   drawSparkline();
+  try { startBalanceInput.focus(); } catch (e) {}
 })();
 </script>
 </body>
