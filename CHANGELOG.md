@@ -28,6 +28,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   so the rigging stays hidden until the truth screen is revealed.
 
 ### Changed
+- Reimplemented the casino stage from the "Lucky Parity" Claude Design project
+  (neon Las Vegas theme): a glowing Monoton marquee sign with chasing bulbs,
+  ambient night glows and rotating light rays, slot-machine reel housings around
+  the dice, a jackpot/streak meter, a live chip-stack visual, a balance
+  sparkline, and win/lose SFX pops with a near-miss table shake. Truth mode is
+  kept deliberately sober (receipt ledger, probability chart, help panel). Ported
+  from the `.dc.html` design-compiler source into a standalone `index.html`.
 - Bet chip denominations are now ₱100 / ₱500 / ₱1,000 (previously
   ₱1,000 / ₱10,000 / ₱100,000).
 - Moved the in-game scoreboard into a sticky right-hand sidebar (two-column

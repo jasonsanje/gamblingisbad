@@ -6,19 +6,23 @@
 <title>Lucky Parity — A Rigged Game, On Purpose</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Monoton&family=Bungee&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    /* casino mode */
-    --felt-dark:#0a2419;
+    --night:#07030f;
+    --night-2:#0e0722;
+    --neon-magenta:#ff2d9b;
+    --neon-cyan:#22e6e6;
+    --neon-purple:#a24bff;
+    --gold:#ffce4a;
+    --gold-bright:#ffe08a;
+    --felt-dark:#0b2b1e;
     --felt:#123b2a;
     --felt-light:#1d5238;
-    --gold:#e8b94a;
-    --gold-bright:#f5d67c;
-    --ivory:#f3eedd;
-    --ivory-dim:#cfc7ab;
-    --loss:#c1443d;
-    --win:#7fbf8f;
+    --ivory:#f4efe0;
+    --ivory-dim:#c9c0a6;
+    --loss:#ff5a6e;
+    --win:#5ff0a0;
     /* truth mode */
     --ink-bg:#12151b;
     --ink-bg-2:#181c24;
@@ -30,403 +34,323 @@
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   body{
-    background:var(--felt-dark);
+    background:var(--night);
     font-family:'Inter',system-ui,sans-serif;
     color:var(--ivory);
     min-height:100vh;
     transition:background .6s ease;
+    overflow-x:hidden;
   }
   body.truth-active{ background:var(--ink-bg); }
+  a{ color:var(--neon-cyan); }
+  a:hover{ color:var(--gold-bright); }
   .hidden{ display:none !important; }
   button{ font-family:inherit; cursor:pointer; }
-  button:disabled{ cursor:not-allowed; opacity:.45; }
+  button:disabled{ cursor:not-allowed; opacity:.4; }
 
-  .stage{
-    max-width:640px;
-    margin:0 auto;
-    padding:32px 20px 60px;
-  }
+  /* ---------- ambient vegas night ---------- */
+  .ambient{ position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+  .ambient .glow{ position:absolute; border-radius:50%; filter:blur(70px); opacity:.5; }
+  .glow.g1{ width:520px;height:520px; left:-140px; top:-120px; background:var(--neon-magenta); animation:floaty 13s ease-in-out infinite; }
+  .glow.g2{ width:560px;height:560px; right:-160px; top:-80px; background:var(--neon-purple); animation:floaty 16s ease-in-out infinite reverse; }
+  .glow.g3{ width:600px;height:600px; left:20%; bottom:-260px; background:var(--neon-cyan); opacity:.32; animation:floaty 19s ease-in-out infinite; }
+  .glow.g4{ width:420px;height:420px; right:8%; bottom:-180px; background:var(--gold); opacity:.28; animation:floaty 15s ease-in-out infinite reverse; }
+  body.truth-active .ambient{ opacity:0; transition:opacity .6s ease; }
+  @keyframes floaty{ 0%,100%{ transform:translate(0,0) scale(1);} 50%{ transform:translate(24px,-26px) scale(1.08);} }
+  .rays{ position:fixed; inset:0; z-index:0; pointer-events:none;
+    background:repeating-conic-gradient(from 0deg at 50% -6%, rgba(255,206,74,.05) 0deg 5deg, transparent 5deg 16deg);
+    animation:raysturn 60s linear infinite; opacity:.55; }
+  body.truth-active .rays{ opacity:0; }
+  @keyframes raysturn{ to{ transform:rotate(360deg);} }
 
-  /* ---------- CASINO MODE ---------- */
-  .marquee{ text-align:center; margin-bottom:22px; }
-  .eyebrow{
-    font-family:'IBM Plex Mono',monospace;
-    font-size:11px;
-    letter-spacing:.14em;
-    color:var(--gold);
-    opacity:.85;
-    margin:0 0 10px;
+  .stage{ position:relative; z-index:1; max-width:640px; margin:0 auto; padding:30px 20px 60px; }
+  .casino-stage{ max-width:1060px; }
+  .casino-columns{ display:flex; align-items:flex-start; gap:26px; }
+  .casino-main{ flex:1 1 auto; min-width:0; max-width:640px; margin:0 auto; }
+
+  /* ---------- neon marquee sign ---------- */
+  .marquee{ text-align:center; margin-bottom:20px; }
+  .signframe{
+    display:inline-block; padding:10px 30px 14px; border-radius:16px;
+    border:2px solid rgba(255,206,74,.35);
+    background:radial-gradient(ellipse at 50% 40%, rgba(162,75,255,.16), rgba(7,3,15,.2) 72%);
+    box-shadow:0 0 0 4px rgba(7,3,15,.6), 0 0 40px rgba(255,45,155,.25), inset 0 0 30px rgba(0,0,0,.5);
+    position:relative;
   }
+  .signframe::before, .signframe::after{
+    content:""; position:absolute; top:0; bottom:0; width:14px;
+    background-image:radial-gradient(circle, var(--gold-bright) 34%, transparent 38%);
+    background-size:14px 22px; background-repeat:repeat-y;
+    animation:bulbBlink 1.1s steps(2) infinite;
+  }
+  .signframe::before{ left:-9px; } .signframe::after{ right:-9px; animation-delay:.55s; }
+  @keyframes bulbBlink{ 0%{ filter:brightness(1);} 50%{ filter:brightness(.35);} }
   .marquee h1{
-    font-family:'Fraunces',serif;
-    font-optical-sizing:auto;
-    font-weight:700;
-    font-size:clamp(40px,9vw,64px);
-    letter-spacing:.01em;
-    margin:0;
+    font-family:'Monoton',cursive; font-weight:400;
+    font-size:clamp(40px,9vw,78px); letter-spacing:.02em; margin:0; line-height:1;
     color:var(--gold-bright);
-    text-shadow:0 0 24px rgba(232,185,74,.35);
+    text-shadow:0 0 6px #fff, 0 0 16px var(--gold-bright), 0 0 34px var(--neon-magenta), 0 0 60px var(--neon-magenta);
+    animation:signFlicker 5s infinite;
   }
-  .tagline{
-    font-family:'Fraunces',serif;
-    font-style:italic;
-    font-weight:500;
-    color:var(--ivory-dim);
-    margin:8px 0 0;
-    font-size:16px;
+  @keyframes signFlicker{
+    0%,19%,21%,23%,80%,100%{ opacity:1; }
+    20%,22%{ opacity:.55; }
+    82%{ opacity:.7; }
   }
+  .tagline{ font-family:'Fraunces',serif; font-style:italic; font-weight:500; color:var(--ivory-dim); margin:12px 0 0; font-size:16px; }
 
-  .hud{ display:flex; gap:12px; justify-content:center; margin-bottom:24px; }
+  /* ---------- HUD LED panels ---------- */
+  .hud{ display:flex; gap:12px; justify-content:center; margin-bottom:22px; flex-wrap:wrap; }
   .pill{
-    background:var(--felt-light);
-    border:1px solid rgba(232,185,74,.35);
-    border-radius:999px;
-    padding:8px 18px;
-    display:flex;
-    align-items:baseline;
-    gap:6px;
+    background:linear-gradient(180deg, rgba(29,82,56,.6), rgba(7,3,15,.7));
+    border:1px solid rgba(255,206,74,.4);
+    border-radius:12px; padding:9px 20px; display:flex; align-items:baseline; gap:8px;
+    box-shadow:inset 0 0 18px rgba(0,0,0,.5), 0 0 16px rgba(255,206,74,.12);
   }
-  .pill-label{ font-size:11px; letter-spacing:.08em; color:var(--ivory-dim); text-transform:uppercase; }
-  .pill-value{ font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:16px; color:var(--gold-bright); }
-  .pill-unit{ font-size:11px; color:var(--ivory-dim); }
+  .pill-label{ font-size:10px; letter-spacing:.14em; color:var(--ivory-dim); text-transform:uppercase; }
+  .pill-value{ font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:18px; color:var(--gold-bright); text-shadow:0 0 10px rgba(255,206,74,.5); }
+  .pill.streak-pill .pill-value{ color:var(--win); text-shadow:0 0 10px rgba(95,240,160,.6); }
 
+  /* ---------- table ---------- */
   .table-felt{
-    background:radial-gradient(circle at 50% 0%, var(--felt-light), var(--felt) 70%);
-    border:1px solid rgba(232,185,74,.25);
-    border-radius:20px;
-    padding:28px 22px 26px;
-    box-shadow:inset 0 0 60px rgba(0,0,0,.35), 0 18px 40px rgba(0,0,0,.4);
+    position:relative;
+    background:radial-gradient(circle at 50% 0%, var(--felt-light), var(--felt) 68%);
+    border:1px solid rgba(255,206,74,.28);
+    border-radius:22px; padding:26px 22px 24px;
+    box-shadow:inset 0 0 70px rgba(0,0,0,.45), 0 18px 46px rgba(0,0,0,.55), 0 0 34px rgba(162,75,255,.18);
+  }
+  .table-felt::after{
+    content:""; position:absolute; inset:10px; border-radius:16px;
+    border:1px dashed rgba(255,206,74,.18); pointer-events:none;
   }
 
-  .dice-row{ display:flex; justify-content:center; gap:18px; margin-bottom:16px; }
+  /* ---------- slot reels (dice) ---------- */
+  .dice-row{ display:flex; justify-content:center; gap:18px; margin-bottom:14px; position:relative; z-index:1; }
+  .reel{
+    position:relative; padding:9px; border-radius:16px;
+    background:linear-gradient(180deg,#2a2030,#0c0812);
+    box-shadow:0 0 0 2px rgba(255,206,74,.5), 0 8px 20px rgba(0,0,0,.55), inset 0 0 14px rgba(0,0,0,.6);
+  }
+  .reel::before{ content:""; position:absolute; left:6px; right:6px; top:50%; height:2px; transform:translateY(-50%);
+    background:linear-gradient(90deg,transparent,rgba(255,90,110,.7),transparent); z-index:3; pointer-events:none; }
   .die{
-    width:64px; height:64px;
-    background:var(--ivory);
-    border-radius:12px;
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    grid-template-rows:repeat(3,1fr);
-    padding:10px;
-    box-shadow:0 6px 14px rgba(0,0,0,.4);
-    transition:transform .15s ease;
+    width:74px; height:74px; background:var(--ivory); border-radius:12px;
+    display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr);
+    padding:11px; box-shadow:0 6px 14px rgba(0,0,0,.5); transition:transform .15s ease;
   }
-  .die.rolling{ animation:rollspin .55s ease-in-out; }
-  @keyframes rollspin{
-    0%{ transform:rotate(0deg) scale(1); }
-    30%{ transform:rotate(120deg) scale(1.08); }
-    60%{ transform:rotate(240deg) scale(.96); }
-    100%{ transform:rotate(360deg) scale(1); }
-  }
-  .pip{
-    width:10px; height:10px;
-    border-radius:50%;
-    background:var(--felt-dark);
-    justify-self:center;
-    align-self:center;
-    opacity:0;
-  }
+  .die.rolling{ animation:reelSpin .55s ease-in-out; }
+  @keyframes reelSpin{
+    0%{ transform:translateY(0) rotate(0);} 25%{ transform:translateY(-8px) rotate(90deg);} 
+    50%{ transform:translateY(8px) rotate(180deg);} 75%{ transform:translateY(-6px) rotate(270deg);} 
+    100%{ transform:translateY(0) rotate(360deg);} }
+  .pip{ width:11px; height:11px; border-radius:50%; background:var(--felt-dark); justify-self:center; align-self:center; opacity:0; }
   .pip.lit{ opacity:1; }
 
-  .result-line{
-    text-align:center;
-    font-family:'IBM Plex Mono',monospace;
-    font-size:14px;
-    color:var(--ivory-dim);
-    min-height:20px;
-    margin:0 0 20px;
+  .result-line{ text-align:center; font-family:'IBM Plex Mono',monospace; font-size:14px; color:var(--ivory-dim); min-height:20px; margin:0 0 14px; }
+  .result-line.win{ color:var(--win); text-shadow:0 0 12px rgba(95,240,160,.7); }
+  .result-line.lose{ color:var(--loss); text-shadow:0 0 10px rgba(255,90,110,.6); }
+
+  /* ---------- jackpot / streak meter ---------- */
+  .streak-wrap{ margin:0 0 16px; }
+  .streak-head{ display:flex; justify-content:space-between; align-items:center; margin:0 2px 6px; }
+  .streak-title{ font-family:'Bungee',sans-serif; font-size:11px; letter-spacing:.08em; color:var(--gold-bright); text-transform:uppercase; }
+  .streak-state{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ivory-dim); }
+  .streak-track{ display:flex; gap:6px; }
+  .streak-seg{ flex:1; height:12px; border-radius:6px; background:rgba(0,0,0,.4); border:1px solid rgba(255,206,74,.2); transition:all .3s ease; }
+  .streak-seg.on{ background:linear-gradient(90deg,var(--neon-cyan),var(--win)); box-shadow:0 0 12px rgba(95,240,160,.7); border-color:transparent; }
+  .streak-wrap.hot .streak-seg.on{ background:linear-gradient(90deg,var(--gold),var(--neon-magenta)); box-shadow:0 0 16px rgba(255,206,74,.8); }
+  .streak-wrap.jackpot{ animation:jackGlow 1s ease-in-out infinite; }
+  .streak-wrap.jackpot .streak-title{ animation:jackText 1s ease-in-out infinite; }
+  @keyframes jackGlow{ 0%,100%{ filter:none;} 50%{ filter:drop-shadow(0 0 12px rgba(255,206,74,.8));} }
+  @keyframes jackText{ 0%,100%{ text-shadow:0 0 8px var(--gold);} 50%{ text-shadow:0 0 20px var(--gold-bright),0 0 40px var(--neon-magenta);} }
+
+  /* ---------- bet controls ---------- */
+  .bonus-badge{
+    display:inline-flex; align-items:center; gap:6px; margin:0 auto 12px;
+    padding:7px 16px; border-radius:999px;
+    background:linear-gradient(90deg, rgba(255,206,74,.18), rgba(95,240,160,.18));
+    border:1px solid rgba(255,206,74,.6);
+    font-family:'Bungee',sans-serif; font-size:11px; letter-spacing:.06em; color:var(--gold-bright);
+    text-shadow:0 0 10px rgba(255,206,74,.5); animation:badgePulse 1.4s ease-in-out infinite;
   }
-  .result-line.win{ color:var(--win); }
-  .result-line.lose{ color:var(--loss); }
+  @keyframes badgePulse{ 0%,100%{ box-shadow:0 0 0 rgba(255,206,74,0);} 50%{ box-shadow:0 0 18px rgba(255,206,74,.6);} }
 
   .bet-row{ display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
-  .bet-label{ font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--ivory-dim); margin-right:2px; }
+  .bet-label{ font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--ivory-dim); margin-right:2px; }
   .chip-select{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
   .chip{
-    padding:10px 14px;
-    border-radius:999px;
-    border:2px dashed rgba(232,185,74,.5);
-    background:var(--felt-dark);
-    color:var(--gold-bright);
-    font-family:'IBM Plex Mono',monospace;
-    font-weight:600;
-    font-size:12px;
-    white-space:nowrap;
+    padding:10px 15px; border-radius:999px; border:2px dashed rgba(255,206,74,.5);
+    background:rgba(7,3,15,.6); color:var(--gold-bright);
+    font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:12px; white-space:nowrap;
+    transition:all .15s ease;
   }
-  .chip.active{ border-style:solid; background:var(--gold); color:var(--felt-dark); }
+  .chip:hover:not(:disabled){ border-color:var(--gold); box-shadow:0 0 12px rgba(255,206,74,.3); }
+  .chip.active{ border-style:solid; background:linear-gradient(180deg,var(--gold-bright),var(--gold)); color:#1a1005; box-shadow:0 0 18px rgba(255,206,74,.5); }
+  .chip:disabled{ opacity:.3; border-style:dotted; }
+  .chip:disabled.active{ background:rgba(7,3,15,.6); color:var(--gold-bright); }
   .custom-bet-input{
-    width:128px;
-    padding:9px 12px;
-    border-radius:999px;
-    border:2px dashed rgba(232,185,74,.5);
-    background:var(--felt-dark);
-    color:var(--gold-bright);
-    font-family:'IBM Plex Mono',monospace;
-    font-weight:600;
-    font-size:12px;
-    text-align:center;
+    width:130px; padding:9px 12px; border-radius:999px; border:2px dashed rgba(255,206,74,.5);
+    background:rgba(7,3,15,.6); color:var(--gold-bright);
+    font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:12px; text-align:center;
   }
-  .custom-bet-input::placeholder{ color:var(--ivory-dim); opacity:.7; }
-  .custom-bet-input:focus{ outline:none; border-style:solid; }
-  .custom-bet-input.active{ border-style:solid; background:var(--gold); color:var(--felt-dark); }
-  .bet-warning{
-    text-align:center;
-    font-family:'IBM Plex Mono',monospace;
-    font-size:11px;
-    color:var(--loss);
-    margin:0 0 14px;
-    min-height:14px;
-  }
-  .bet-note{
-    text-align:center;
-    font-family:'IBM Plex Mono',monospace;
-    font-size:11px;
-    color:var(--ivory-dim);
-    margin:0 0 14px;
-    min-height:14px;
-    transition:color .3s ease;
-  }
-  .bet-note.flash{ color:var(--gold-bright); font-weight:600; }
-  .chip:disabled{
-    opacity:.35;
-    border-style:dotted;
-    cursor:not-allowed;
-  }
-  .chip:disabled.active{ background:var(--felt-dark); color:var(--gold-bright); }
+  .custom-bet-input::placeholder{ color:var(--ivory-dim); opacity:.65; }
+  .custom-bet-input:focus{ outline:none; border-style:solid; border-color:var(--gold); }
+  .bet-note{ text-align:center; font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ivory-dim); margin:0 0 10px; min-height:14px; transition:color .3s ease; }
+  .bet-note.flash{ color:var(--gold-bright); font-weight:700; }
+  .bet-warning{ text-align:center; font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--loss); margin:0 0 12px; min-height:14px; }
 
-  /* ---------- hidden operator controls ---------- */
-  #operatorDot{
-    position:fixed;
-    bottom:8px;
-    right:8px;
-    width:16px;
-    height:16px;
-    padding:0;
-    border:none;
-    border-radius:50%;
-    background:rgba(255,255,255,.06);
-    z-index:1000;
-  }
-  #operatorDot:hover{ background:rgba(255,255,255,.14); }
-  .operator-panel{
-    position:fixed;
-    bottom:32px;
-    right:8px;
-    z-index:1000;
-    background:#0d0f13;
-    border:1px solid rgba(232,185,74,.4);
-    border-radius:10px;
-    padding:14px;
-    width:200px;
-    box-shadow:0 12px 30px rgba(0,0,0,.5);
-  }
-  .operator-title{
-    font-family:'IBM Plex Mono',monospace;
-    font-size:11px;
-    letter-spacing:.1em;
-    text-transform:uppercase;
-    color:var(--gold-bright);
-    margin:0 0 8px;
-  }
-  .operator-status{
-    font-family:'IBM Plex Mono',monospace;
-    font-size:10.5px;
-    color:var(--ivory-dim);
-    margin:0 0 10px;
-  }
-  .operator-btn{
-    display:block;
-    width:100%;
-    padding:9px 0;
-    margin-bottom:8px;
-    border-radius:8px;
-    border:1px solid rgba(232,185,74,.4);
-    background:transparent;
-    color:var(--ivory);
-    font-size:11.5px;
-    font-weight:600;
-  }
-  .operator-btn:last-child{ margin-bottom:0; }
-  .operator-btn.rig:hover{ background:var(--stamp); border-color:var(--stamp); color:#fff; }
-  .operator-btn.wipe:hover{ background:var(--gold); border-color:var(--gold); color:var(--felt-dark); }
-
-  .guess-row{ display:flex; justify-content:center; gap:12px; margin-bottom:18px; }
+  .guess-row{ display:flex; justify-content:center; gap:12px; margin-bottom:16px; }
   .guess-btn{
-    flex:1; max-width:150px;
-    padding:14px 0;
-    border-radius:10px;
-    border:1px solid rgba(232,185,74,.4);
-    background:transparent;
-    color:var(--ivory);
-    font-weight:600;
-    letter-spacing:.06em;
-    font-size:14px;
+    flex:1; max-width:150px; padding:14px 0; border-radius:12px;
+    border:1px solid rgba(255,206,74,.4); background:rgba(7,3,15,.4); color:var(--ivory);
+    font-family:'Bungee',sans-serif; font-size:14px; letter-spacing:.04em; transition:all .15s ease;
   }
-  .guess-btn.active{ background:var(--gold); color:var(--felt-dark); border-color:var(--gold); }
+  .guess-btn:hover{ border-color:var(--gold); box-shadow:0 0 14px rgba(255,206,74,.25); }
+  .guess-btn.active{ background:linear-gradient(180deg,var(--gold-bright),var(--gold)); color:#1a1005; border-color:var(--gold); box-shadow:0 0 20px rgba(255,206,74,.5); }
 
   .roll-btn{
-    display:block;
-    width:100%;
-    padding:16px 0;
-    border:none;
-    border-radius:12px;
+    display:block; width:100%; padding:18px 0; border:none; border-radius:14px;
     background:linear-gradient(180deg, var(--gold-bright), var(--gold));
-    color:var(--felt-dark);
-    font-weight:700;
-    font-size:15px;
-    letter-spacing:.08em;
-    box-shadow:0 8px 18px rgba(232,185,74,.25);
+    color:#1a1005; font-family:'Bungee',sans-serif; font-size:17px; letter-spacing:.06em;
+    box-shadow:0 8px 22px rgba(255,206,74,.35), 0 0 30px rgba(255,45,155,.2);
+    transition:filter .15s ease, transform .1s ease;
   }
-  .roll-btn:not(:disabled):hover{ filter:brightness(1.05); }
+  .roll-btn:not(:disabled):hover{ filter:brightness(1.06); }
+  .roll-btn:not(:disabled):active{ transform:translateY(2px); }
 
-  .sparkline-wrap{ margin-top:26px; text-align:center; }
-  .sparkline-label{ font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ivory-dim); }
-  #sparkline{ width:100%; height:100px; margin-top:8px; }
+  /* ---------- chip stack visual ---------- */
+  .stack-wrap{ margin-top:22px; text-align:center; }
+  .stack-label{ font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--ivory-dim); }
+  .chip-stack{ display:flex; justify-content:center; align-items:flex-end; gap:10px; height:96px; margin-top:8px; }
+  .stack-col{ display:flex; flex-direction:column-reverse; align-items:center; }
+  .stack-chip{ width:44px; height:10px; border-radius:50%/60%; margin-top:-5px;
+    box-shadow:0 1px 2px rgba(0,0,0,.5), inset 0 1px 1px rgba(255,255,255,.25); }
+  .sc-red{ background:repeating-conic-gradient(#e0473f 0 30deg,#b8352e 30deg 60deg); }
+  .sc-blue{ background:repeating-conic-gradient(#3a7be0 0 30deg,#2b5cb8 30deg 60deg); }
+  .sc-gold{ background:repeating-conic-gradient(var(--gold-bright) 0 30deg,var(--gold) 30deg 60deg); }
+  .sc-green{ background:repeating-conic-gradient(#3fbf7a 0 30deg,#2f9a5f 30deg 60deg); }
 
-  /* ---------- two-column casino layout ---------- */
-  .casino-stage{ max-width:1020px; }
-  .casino-columns{
-    display:flex;
-    align-items:flex-start;
-    gap:24px;
-  }
-  .casino-main{
-    flex:1 1 auto;
-    min-width:0;
-    max-width:640px;
-    margin:0 auto;
-  }
+  .sparkline-wrap{ margin-top:22px; text-align:center; }
+  .sparkline-label{ font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--ivory-dim); }
+  #sparkline{ width:100%; height:96px; margin-top:8px; }
 
-  /* ---------- in-game scoreboard ---------- */
-  .scoreboard-wrap{
-    flex:0 0 300px;
-    position:sticky;
-    top:20px;
+  .cashout-btn{
+    display:block; margin:24px auto 0; background:rgba(7,3,15,.4);
+    border:1px solid rgba(255,206,74,.4); border-radius:10px; padding:11px 22px;
+    color:var(--gold-bright); font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:.04em;
+    transition:all .15s ease;
   }
-  @media (max-width:840px){
+  .cashout-btn:hover{ background:var(--gold); color:#1a1005; }
+
+  /* ---------- scoreboard ---------- */
+  .scoreboard-wrap{ flex:0 0 300px; position:sticky; top:20px; }
+  @media (max-width:860px){
     .casino-columns{ flex-direction:column; }
     .casino-main{ max-width:none; }
     .scoreboard-wrap{ flex:1 1 auto; position:static; margin-top:26px; }
   }
-  .scoreboard-label{
-    font-size:11px; letter-spacing:.08em; text-transform:uppercase;
-    color:var(--ivory-dim); text-align:center; margin:0 0 10px;
-  }
-  .scoreboard{
-    background:rgba(0,0,0,.22);
-    border:1px solid rgba(232,185,74,.22);
-    border-radius:12px;
-    overflow:hidden;
-  }
-  .scoreboard-scroll{ max-height:240px; overflow-y:auto; }
-  .scoreboard table{
-    width:100%; border-collapse:collapse;
-    font-family:'IBM Plex Mono',monospace; font-size:12px;
-  }
-  .scoreboard th, .scoreboard td{
-    padding:8px 10px; text-align:center;
-    border-bottom:1px solid rgba(232,185,74,.12);
-  }
-  .scoreboard thead th{
-    position:sticky; top:0;
-    background:var(--felt);
-    color:var(--gold-bright);
-    font-size:10.5px; letter-spacing:.08em; text-transform:uppercase;
-    font-weight:600;
-  }
+  .scoreboard-label{ font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--ivory-dim); text-align:center; margin:0 0 10px; }
+  .scoreboard{ background:rgba(0,0,0,.3); border:1px solid rgba(255,206,74,.24); border-radius:14px; overflow:hidden; box-shadow:inset 0 0 26px rgba(0,0,0,.5); }
+  .scoreboard-scroll{ max-height:300px; overflow-y:auto; }
+  .scoreboard table{ width:100%; border-collapse:collapse; font-family:'IBM Plex Mono',monospace; font-size:12px; }
+  .scoreboard th, .scoreboard td{ padding:8px 10px; text-align:center; border-bottom:1px solid rgba(255,206,74,.1); }
+  .scoreboard thead th{ position:sticky; top:0; background:var(--felt); color:var(--gold-bright); font-size:10px; letter-spacing:.08em; text-transform:uppercase; font-weight:700; }
   .scoreboard tbody td{ color:var(--ivory); }
   .scoreboard tbody tr:last-child td{ border-bottom:none; }
-  .scoreboard td.win{ color:var(--win); font-weight:600; }
-  .scoreboard td.lose{ color:var(--loss); font-weight:600; }
-  .scoreboard-empty{
-    text-align:center; padding:18px 10px;
-    font-family:'IBM Plex Mono',monospace; font-size:12px;
-    color:var(--ivory-dim);
-  }
+  .scoreboard td.win{ color:var(--win); font-weight:700; }
+  .scoreboard td.lose{ color:var(--loss); font-weight:700; }
+  .scoreboard-empty{ text-align:center; padding:18px 10px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ivory-dim); }
 
-  .instructor-toggle{
-    display:flex; align-items:center; gap:8px;
-    justify-content:center;
-    margin-top:22px;
-    font-size:12px;
-    color:var(--ivory-dim);
-    font-family:'IBM Plex Mono',monospace;
-  }
-  .instructor-panel{
-    margin-top:12px;
-    background:rgba(0,0,0,.25);
-    border:1px dashed rgba(232,185,74,.4);
-    border-radius:10px;
-    padding:12px 14px;
-    font-family:'IBM Plex Mono',monospace;
-    font-size:12px;
-    color:var(--gold-bright);
-    text-align:center;
-  }
+  /* ---------- hidden operator controls ---------- */
+  #operatorDot{ position:fixed; bottom:8px; right:8px; width:16px; height:16px; padding:0; border:none; border-radius:50%; background:rgba(255,255,255,.06); z-index:1000; }
+  #operatorDot:hover{ background:rgba(255,255,255,.16); }
+  .operator-panel{ position:fixed; bottom:32px; right:8px; z-index:1000; background:#0d0f13; border:1px solid rgba(255,206,74,.4); border-radius:10px; padding:14px; width:220px; box-shadow:0 12px 30px rgba(0,0,0,.6); }
+  .operator-title{ font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--gold-bright); margin:0 0 8px; }
+  .operator-status{ font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--ivory-dim); margin:0 0 10px; }
+  .operator-btn{ display:block; width:100%; padding:9px 0; margin-bottom:8px; border-radius:8px; border:1px solid rgba(255,206,74,.4); background:transparent; color:var(--ivory); font-size:11.5px; font-weight:600; }
+  .operator-btn.rig:hover{ background:var(--stamp); border-color:var(--stamp); color:#fff; }
+  .operator-btn.wipe:hover{ background:var(--gold); border-color:var(--gold); color:#1a1005; }
+  .operator-check{ display:flex; align-items:center; gap:8px; font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--ivory-dim); margin-top:10px; }
+  #operatorInstructorPanel{ margin-top:8px; font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--gold-bright); line-height:1.4; }
 
-  .expose-btn{
-    display:block;
-    margin:26px auto 0;
-    background:none;
-    border:none;
-    color:var(--ivory-dim);
-    font-size:12px;
-    text-decoration:underline;
-    letter-spacing:.02em;
-  }
-  .expose-btn:hover{ color:var(--gold-bright); }
+  /* ---------- confetti + celebration ---------- */
+  #confetti{ position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:2000; }
+  .table-felt.celebrate{ box-shadow:inset 0 0 70px rgba(0,0,0,.4), 0 0 60px rgba(255,206,74,.6), 0 18px 46px rgba(0,0,0,.55); }
+  .table-felt.nearmiss{ animation:tableShake .5s ease; box-shadow:inset 0 0 70px rgba(0,0,0,.4), 0 0 50px rgba(255,90,110,.6), 0 18px 46px rgba(0,0,0,.55); }
+  @keyframes tableShake{ 0%,100%{ transform:translateX(0);} 15%{ transform:translateX(-7px);} 30%{ transform:translateX(6px);} 45%{ transform:translateX(-5px);} 60%{ transform:translateX(4px);} 75%{ transform:translateX(-2px);} }
 
-  /* ---------- TRUTH MODE ---------- */
+  .celebration{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none; z-index:2100; opacity:0; }
+  .celebration.show{ animation:banner 1.6s cubic-bezier(.2,.7,.2,1) forwards; }
+  .celebration .banner-text{ font-family:'Bungee',sans-serif; font-weight:400; font-size:clamp(52px,15vw,128px); letter-spacing:.02em; line-height:.92; text-align:center; text-transform:uppercase; }
+  .celebration.win .banner-text{ color:var(--gold-bright); animation:neonPulse 1.6s ease-in-out; }
+  .celebration.lose .banner-text{ color:#ff6b62; animation:neonPulseRed 1.6s ease-in-out; }
+  .celebration .banner-sub{ display:block; font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:clamp(12px,3vw,18px); letter-spacing:.32em; margin-top:14px; color:var(--ivory); text-shadow:0 0 12px rgba(0,0,0,.6); }
+  @keyframes banner{ 0%{ opacity:0; transform:scale(.6);} 14%{ opacity:1; transform:scale(1.06);} 24%{ transform:scale(1);} 78%{ opacity:1; transform:scale(1);} 100%{ opacity:0; transform:scale(1.02);} }
+  @keyframes neonPulse{ 0%,100%{ text-shadow:0 0 6px #fff,0 0 20px var(--gold-bright),0 0 44px var(--gold),0 0 80px var(--neon-magenta);} 50%{ text-shadow:0 0 10px #fff,0 0 34px var(--gold-bright),0 0 70px var(--gold),0 0 120px var(--neon-magenta);} }
+  @keyframes neonPulseRed{ 0%,100%{ text-shadow:0 0 6px #fff,0 0 20px #ff6b62,0 0 44px var(--loss),0 0 80px var(--loss);} 50%{ text-shadow:0 0 10px #fff,0 0 34px #ff6b62,0 0 70px var(--loss),0 0 120px var(--loss);} }
+
+  /* ---------- SFX pops ---------- */
+  #sfxLayer{ position:fixed; inset:0; pointer-events:none; z-index:2150; overflow:hidden; }
+  .sfx{ position:absolute; font-family:'Bungee',sans-serif; font-size:clamp(20px,4vw,34px); white-space:nowrap; animation:sfxPop 1.1s ease-out forwards; }
+  .sfx.win{ color:var(--gold-bright); text-shadow:0 0 10px var(--gold),0 0 24px var(--neon-magenta); }
+  .sfx.lose{ color:#ff6b62; text-shadow:0 0 10px var(--loss); }
+  @keyframes sfxPop{ 0%{ opacity:0; transform:translateY(0) scale(.5) rotate(-6deg);} 20%{ opacity:1; transform:translateY(-14px) scale(1.15) rotate(-4deg);} 60%{ opacity:1; transform:translateY(-40px) scale(1) rotate(-2deg);} 100%{ opacity:0; transform:translateY(-90px) scale(.9);} }
+
+  /* ---------- MODALS ---------- */
+  .modal-overlay{ position:fixed; inset:0; z-index:2300; display:flex; align-items:center; justify-content:center; padding:24px;
+    background:radial-gradient(circle at 50% 30%, rgba(162,75,255,.35), rgba(4,2,9,.92) 78%); backdrop-filter:blur(7px); -webkit-backdrop-filter:blur(7px); }
+  .modal-overlay.hidden{ display:none !important; }
+  .modal-card{ position:relative; width:100%; max-width:430px;
+    background:radial-gradient(circle at 50% -10%, var(--felt-light), var(--felt) 72%);
+    border:1px solid rgba(255,206,74,.45); border-radius:22px; padding:34px 28px 30px; text-align:center;
+    box-shadow:inset 0 0 60px rgba(0,0,0,.45), 0 24px 60px rgba(0,0,0,.7), 0 0 40px rgba(255,45,155,.2);
+    animation:modalPop .45s cubic-bezier(.2,.8,.25,1); }
+  @keyframes modalPop{ 0%{ opacity:0; transform:translateY(14px) scale(.92);} 100%{ opacity:1; transform:translateY(0) scale(1);} }
+  .modal-eyebrow{ font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--gold); margin:0 0 12px; }
+  .modal-card h2{ font-family:'Monoton',cursive; font-weight:400; font-size:clamp(30px,8vw,46px); color:var(--gold-bright); margin:0 0 14px; line-height:1;
+    text-shadow:0 0 6px #fff,0 0 18px var(--gold-bright),0 0 40px var(--neon-magenta); }
+  .modal-card p.modal-body{ font-size:14px; line-height:1.55; color:var(--ivory-dim); margin:0 auto 22px; max-width:330px; }
+  .modal-balance-field{ display:flex; align-items:center; justify-content:center; gap:8px; margin:0 auto 8px; max-width:270px; }
+  .modal-peso{ font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:26px; color:var(--gold-bright); }
+  .modal-balance-input{ flex:1; min-width:0; padding:12px 14px; border-radius:12px; border:2px solid rgba(255,206,74,.5);
+    background:rgba(7,3,15,.6); color:var(--ivory); font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:20px; text-align:center; }
+  .modal-balance-input:focus{ outline:none; border-color:var(--gold); }
+  .modal-balance-input::placeholder{ color:var(--ivory-dim); opacity:.5; }
+  .modal-warning{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--loss); min-height:14px; margin:0 0 16px; }
+  .modal-btn{ display:block; width:100%; padding:16px 0; border:none; border-radius:12px;
+    background:linear-gradient(180deg, var(--gold-bright), var(--gold)); color:#1a1005;
+    font-family:'Bungee',sans-serif; font-size:16px; letter-spacing:.05em; box-shadow:0 8px 20px rgba(255,206,74,.35); }
+  .modal-btn:not(:disabled):hover{ filter:brightness(1.06); }
+  .modal-perk{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--win); margin:16px 0 0; letter-spacing:.04em; }
+
+  .modal-card.bonus{ border-color:transparent; border:3px solid transparent;
+    background:linear-gradient(var(--felt), var(--felt)) padding-box,
+      conic-gradient(from 0deg, var(--gold-bright), var(--neon-magenta), var(--gold), var(--win), var(--gold-bright)) border-box;
+    box-shadow:inset 0 0 70px rgba(0,0,0,.4), 0 0 50px rgba(255,206,74,.5), 0 24px 60px rgba(0,0,0,.7); overflow:hidden; }
+  .modal-card.bonus::before{ content:""; position:absolute; inset:0;
+    background-image:repeating-conic-gradient(from 0deg at 50% 0%, rgba(255,224,138,.14) 0deg 6deg, transparent 6deg 18deg);
+    pointer-events:none; animation:bonusRays 14s linear infinite; }
+  @keyframes bonusRays{ to{ transform:rotate(360deg);} }
+  .modal-card.bonus > *{ position:relative; z-index:1; }
+  .bonus-stars{ font-size:30px; letter-spacing:.15em; margin:0 0 6px; animation:bonusStars 1.4s ease-in-out infinite; }
+  @keyframes bonusStars{ 0%,100%{ transform:scale(1); filter:drop-shadow(0 0 6px rgba(255,224,138,.5));} 50%{ transform:scale(1.12); filter:drop-shadow(0 0 16px rgba(255,224,138,.9));} }
+  .modal-card.bonus h2{ animation:bonusGlow 1.6s ease-in-out infinite; }
+  @keyframes bonusGlow{ 0%,100%{ text-shadow:0 0 8px #fff,0 0 22px var(--gold-bright),0 0 44px var(--gold);} 50%{ text-shadow:0 0 12px #fff,0 0 34px var(--gold-bright),0 0 70px var(--neon-magenta);} }
+  .bonus-multiplier{ font-family:'Bungee',sans-serif; font-weight:400; font-size:clamp(52px,16vw,84px); line-height:1; color:#fff; margin:6px 0 4px;
+    text-shadow:0 0 10px #fff,0 0 26px var(--gold-bright),0 0 50px var(--gold),0 0 90px var(--win); animation:bonusPulse 1.2s ease-in-out infinite; }
+  @keyframes bonusPulse{ 0%,100%{ transform:scale(1) rotate(-2deg);} 50%{ transform:scale(1.08) rotate(2deg);} }
+  .bonus-tagline{ font-family:'Fraunces',serif; font-style:italic; font-weight:500; font-size:16px; color:var(--gold-bright); margin:0 0 20px; }
+  .modal-card.bonus .modal-btn{ animation:bonusBtn 1.4s ease-in-out infinite; }
+  @keyframes bonusBtn{ 0%,100%{ box-shadow:0 8px 20px rgba(255,206,74,.35);} 50%{ box-shadow:0 8px 30px rgba(255,224,138,.75);} }
+
+  /* ---------- TRUTH MODE (kept sober on purpose) ---------- */
   .truth-stage{ max-width:720px; color:var(--mono-text); }
   .truth-header{ text-align:center; position:relative; margin-bottom:28px; }
-  .stamp{
-    display:inline-block;
-    border:3px solid var(--stamp);
-    color:var(--stamp);
-    font-family:'IBM Plex Mono',monospace;
-    font-weight:700;
-    font-size:13px;
-    letter-spacing:.2em;
-    padding:5px 14px;
-    transform:rotate(-4deg);
-    border-radius:4px;
-    margin-bottom:14px;
-  }
-  .truth-header h2{
-    font-family:'Fraunces',serif;
-    font-weight:700;
-    font-size:clamp(28px,6vw,40px);
-    color:var(--paper);
-    margin:0 0 10px;
-  }
-  .truth-header p{
-    font-size:14px;
-    color:var(--paper-dim);
-    max-width:520px;
-    margin:0 auto;
-    line-height:1.5;
-  }
-
-  .receipt{
-    background:var(--paper);
-    color:#1c1a14;
-    font-family:'IBM Plex Mono',monospace;
-    font-size:12px;
-    border-radius:2px;
-    padding:20px 18px 26px;
-    margin:26px 0;
-    box-shadow:0 20px 40px rgba(0,0,0,.4);
-    position:relative;
-  }
-  .receipt::after{
-    content:"";
-    position:absolute;
-    left:0; right:0; bottom:-1px; height:14px;
-    background:
-      linear-gradient(-45deg, var(--ink-bg) 6px, transparent 0),
-      linear-gradient(45deg, var(--ink-bg) 6px, transparent 0);
-    background-size:14px 14px;
-    background-repeat:repeat-x;
-  }
+  .stamp{ display:inline-block; border:3px solid var(--stamp); color:var(--stamp); font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:13px; letter-spacing:.2em; padding:5px 14px; transform:rotate(-4deg); border-radius:4px; margin-bottom:14px; }
+  .truth-header h2{ font-family:'Fraunces',serif; font-weight:700; font-size:clamp(28px,6vw,40px); color:var(--paper); margin:0 0 10px; }
+  .truth-header p{ font-size:14px; color:var(--paper-dim); max-width:520px; margin:0 auto; line-height:1.5; }
+  .receipt{ background:var(--paper); color:#1c1a14; font-family:'IBM Plex Mono',monospace; font-size:12px; border-radius:2px; padding:20px 18px 26px; margin:26px 0; box-shadow:0 20px 40px rgba(0,0,0,.4); position:relative; }
+  .receipt::after{ content:""; position:absolute; left:0; right:0; bottom:-1px; height:14px; background:linear-gradient(-45deg, var(--ink-bg) 6px, transparent 0),linear-gradient(45deg, var(--ink-bg) 6px, transparent 0); background-size:14px 14px; background-repeat:repeat-x; }
   .receipt h3{ font-size:12px; letter-spacing:.1em; text-align:center; margin:0 0 12px; text-transform:uppercase; }
   .receipt table{ width:100%; border-collapse:collapse; font-size:11px; }
   .receipt th, .receipt td{ padding:3px 4px; text-align:center; border-bottom:1px dotted rgba(0,0,0,.25); }
@@ -434,352 +358,40 @@
   .receipt td.win{ color:#1c6b3a; font-weight:600; }
   .receipt td.lose{ color:var(--stamp); font-weight:600; }
   .receipt-scroll{ max-height:220px; overflow-y:auto; }
-
   .prob-chart-wrap{ margin:26px 0; }
-  .prob-chart-wrap h3{
-    font-family:'IBM Plex Mono',monospace;
-    font-size:12px; letter-spacing:.1em; text-transform:uppercase;
-    color:var(--paper-dim); margin:0 0 8px; text-align:center;
-  }
+  .prob-chart-wrap h3{ font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--paper-dim); margin:0 0 8px; text-align:center; }
   #probChart{ width:100%; height:140px; }
-
-  .explain-grid{
-    display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
-    gap:14px; margin:26px 0;
-  }
-  .explain-card{
-    background:var(--ink-bg-2);
-    border:1px solid rgba(255,255,255,.08);
-    border-left:3px solid var(--gold);
-    border-radius:8px;
-    padding:16px;
-  }
-  .explain-card h4{
-    font-family:'IBM Plex Mono',monospace;
-    font-size:12px; letter-spacing:.08em;
-    color:var(--gold-bright); margin:0 0 8px;
-  }
+  .explain-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:14px; margin:26px 0; }
+  .explain-card{ background:var(--ink-bg-2); border:1px solid rgba(255,255,255,.08); border-left:3px solid var(--gold); border-radius:8px; padding:16px; }
+  .explain-card h4{ font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:.08em; color:var(--gold-bright); margin:0 0 8px; }
   .explain-card p{ font-size:13px; line-height:1.55; color:var(--paper-dim); margin:0; }
-
-  .help-panel{
-    background:var(--ink-bg-2);
-    border:1px solid rgba(255,255,255,.08);
-    border-radius:10px;
-    padding:20px;
-    margin:26px 0;
-  }
+  .help-panel{ background:var(--ink-bg-2); border:1px solid rgba(255,255,255,.08); border-radius:10px; padding:20px; margin:26px 0; }
   .help-panel h3{ font-size:15px; margin:0 0 8px; color:var(--paper); font-family:'Fraunces',serif; }
   .help-panel p{ font-size:13px; line-height:1.6; color:var(--paper-dim); margin:0 0 10px; }
-  .help-panel .hotline{
-    font-family:'IBM Plex Mono',monospace;
-    font-size:18px;
-    color:var(--gold-bright);
-    font-weight:600;
-  }
-  .help-panel .disclaimer{
-    font-size:11.5px;
-    color:var(--paper-dim);
-    opacity:.75;
-    border-top:1px solid rgba(255,255,255,.08);
-    padding-top:10px;
-    margin-top:14px;
-  }
-
-  .reset-btn{
-    display:block; margin:30px auto 0;
-    padding:14px 26px;
-    border-radius:10px;
-    border:1px solid var(--gold);
-    background:transparent;
-    color:var(--gold-bright);
-    font-weight:600;
-    font-size:13px;
-    letter-spacing:.05em;
-  }
+  .help-panel .hotline{ font-family:'IBM Plex Mono',monospace; font-size:18px; color:var(--gold-bright); font-weight:600; }
+  .help-panel .disclaimer{ font-size:11.5px; color:var(--paper-dim); opacity:.75; border-top:1px solid rgba(255,255,255,.08); padding-top:10px; margin-top:14px; }
+  .reset-btn{ display:block; margin:30px auto 0; padding:14px 26px; border-radius:10px; border:1px solid var(--gold); background:transparent; color:var(--gold-bright); font-weight:600; font-size:13px; letter-spacing:.05em; }
   .reset-btn:hover{ background:var(--gold); color:var(--ink-bg); }
-
-  /* ---------- WIN / LOSE CELEBRATION ---------- */
-  #confetti{
-    position:fixed; inset:0;
-    width:100%; height:100%;
-    pointer-events:none;
-    z-index:2000;
-  }
-
-  /* neon marquee bulbs framing the table on a result */
-  .table-felt{ position:relative; }
-  .table-felt::before{
-    content:"";
-    position:absolute; inset:-6px;
-    border-radius:24px;
-    padding:2px;
-    background:transparent;
-    pointer-events:none;
-    opacity:0;
-    transition:opacity .3s ease;
-    /* dashed bulb string, animated via background-position */
-    background-image:repeating-linear-gradient(90deg, var(--bulb) 0 7px, transparent 7px 18px);
-    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    -webkit-mask-composite:xor;
-            mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-            mask-composite:exclude;
-    background-size:36px 100%;
-  }
-  .table-felt.celebrate::before,
-  .table-felt.nearmiss::before{ opacity:1; animation:bulbChase .6s linear infinite; }
-  .table-felt.celebrate{ --bulb:var(--gold-bright); box-shadow:inset 0 0 60px rgba(0,0,0,.35), 0 0 46px rgba(232,185,74,.55), 0 18px 40px rgba(0,0,0,.4); }
-  .table-felt.nearmiss{ --bulb:var(--loss); animation:tableShake .5s ease; box-shadow:inset 0 0 60px rgba(0,0,0,.35), 0 0 40px rgba(193,68,61,.5), 0 18px 40px rgba(0,0,0,.4); }
-  @keyframes bulbChase{ to{ background-position:36px 0; } }
-  @keyframes tableShake{
-    0%,100%{ transform:translateX(0); }
-    15%{ transform:translateX(-7px); }
-    30%{ transform:translateX(6px); }
-    45%{ transform:translateX(-5px); }
-    60%{ transform:translateX(4px); }
-    75%{ transform:translateX(-2px); }
-  }
-
-  .result-line.win{ color:var(--win); text-shadow:0 0 12px rgba(127,191,143,.75); }
-  .result-line.lose{ color:var(--loss); text-shadow:0 0 10px rgba(193,68,61,.6); }
-
-  /* full-screen neon banner that pops on a result */
-  .celebration{
-    position:fixed; inset:0;
-    display:flex; align-items:center; justify-content:center;
-    pointer-events:none;
-    z-index:2100;
-    opacity:0;
-  }
-  .celebration.show{ animation:banner 1.6s cubic-bezier(.2,.7,.2,1) forwards; }
-  .celebration .banner-text{
-    font-family:'Fraunces',serif;
-    font-weight:700;
-    font-size:clamp(52px,15vw,132px);
-    letter-spacing:.02em;
-    line-height:.92;
-    text-align:center;
-    text-transform:uppercase;
-  }
-  .celebration.win .banner-text{
-    color:var(--gold-bright);
-    animation:neonPulse 1.6s ease-in-out;
-  }
-  .celebration.lose .banner-text{
-    color:#ff6b62;
-    animation:neonPulseRed 1.6s ease-in-out;
-  }
-  .celebration .banner-sub{
-    display:block;
-    font-family:'IBM Plex Mono',monospace;
-    font-weight:600;
-    font-size:clamp(12px,3vw,18px);
-    letter-spacing:.32em;
-    margin-top:14px;
-    color:var(--ivory);
-    text-shadow:0 0 12px rgba(0,0,0,.6);
-  }
-  @keyframes banner{
-    0%{ opacity:0; transform:scale(.6); }
-    14%{ opacity:1; transform:scale(1.06); }
-    24%{ transform:scale(1); }
-    78%{ opacity:1; transform:scale(1); }
-    100%{ opacity:0; transform:scale(1.02); }
-  }
-  @keyframes neonPulse{
-    0%,100%{ text-shadow:0 0 6px #fff, 0 0 20px var(--gold-bright), 0 0 44px var(--gold), 0 0 80px var(--gold); }
-    50%{ text-shadow:0 0 10px #fff, 0 0 34px var(--gold-bright), 0 0 70px var(--gold), 0 0 120px var(--gold); }
-  }
-  @keyframes neonPulseRed{
-    0%,100%{ text-shadow:0 0 6px #fff, 0 0 20px #ff6b62, 0 0 44px var(--loss), 0 0 80px var(--loss); }
-    50%{ text-shadow:0 0 10px #fff, 0 0 34px #ff6b62, 0 0 70px var(--loss), 0 0 120px var(--loss); }
-  }
 
   @media (prefers-reduced-motion: reduce){
     .die.rolling{ animation:none; }
-    .table-felt.celebrate::before,
-    .table-felt.nearmiss::before{ animation:none; }
+    .glow, .rays, .signframe::before, .signframe::after, .marquee h1{ animation:none !important; }
     .table-felt.nearmiss{ animation:none; }
     .celebration.show{ animation:bannerStatic 1.2s ease forwards; }
-    .celebration.win .banner-text,
-    .celebration.lose .banner-text{ animation:none; }
+    .celebration.win .banner-text, .celebration.lose .banner-text{ animation:none; }
+    .modal-card, .modal-card.bonus::before, .bonus-stars, .modal-card.bonus h2, .bonus-multiplier, .modal-card.bonus .modal-btn, .bonus-badge, .sfx{ animation:none; }
   }
-  @keyframes bannerStatic{
-    0%{ opacity:0; }
-    12%{ opacity:1; }
-    80%{ opacity:1; }
-    100%{ opacity:0; }
-  }
-
-  /* ---------- MODALS (balance prompt + bonus round) ---------- */
-  .modal-overlay{
-    position:fixed; inset:0;
-    z-index:2300;
-    display:flex; align-items:center; justify-content:center;
-    padding:24px;
-    background:radial-gradient(circle at 50% 30%, rgba(18,59,42,.75), rgba(4,12,9,.9) 80%);
-    backdrop-filter:blur(6px);
-    -webkit-backdrop-filter:blur(6px);
-  }
-  .modal-overlay.hidden{ display:none !important; }
-  .modal-card{
-    position:relative;
-    width:100%; max-width:420px;
-    background:radial-gradient(circle at 50% -10%, var(--felt-light), var(--felt) 72%);
-    border:1px solid rgba(232,185,74,.4);
-    border-radius:20px;
-    padding:34px 28px 30px;
-    text-align:center;
-    box-shadow:inset 0 0 60px rgba(0,0,0,.4), 0 24px 60px rgba(0,0,0,.6);
-    animation:modalPop .45s cubic-bezier(.2,.8,.25,1);
-  }
-  @keyframes modalPop{
-    0%{ opacity:0; transform:translateY(14px) scale(.92); }
-    100%{ opacity:1; transform:translateY(0) scale(1); }
-  }
-  .modal-eyebrow{
-    font-family:'IBM Plex Mono',monospace;
-    font-size:11px; letter-spacing:.16em; text-transform:uppercase;
-    color:var(--gold); margin:0 0 12px;
-  }
-  .modal-card h2{
-    font-family:'Fraunces',serif; font-weight:700;
-    font-size:clamp(26px,7vw,36px);
-    color:var(--gold-bright);
-    margin:0 0 10px;
-    text-shadow:0 0 20px rgba(232,185,74,.35);
-  }
-  .modal-card p.modal-body{
-    font-size:14px; line-height:1.55;
-    color:var(--ivory-dim);
-    margin:0 auto 22px; max-width:320px;
-  }
-  .modal-balance-field{
-    display:flex; align-items:center; justify-content:center;
-    gap:8px; margin:0 auto 8px; max-width:260px;
-  }
-  .modal-peso{
-    font-family:'IBM Plex Mono',monospace; font-weight:700;
-    font-size:26px; color:var(--gold-bright);
-  }
-  .modal-balance-input{
-    flex:1; min-width:0;
-    padding:12px 14px;
-    border-radius:12px;
-    border:2px solid rgba(232,185,74,.5);
-    background:var(--felt-dark);
-    color:var(--ivory);
-    font-family:'IBM Plex Mono',monospace;
-    font-weight:600; font-size:20px;
-    text-align:center;
-  }
-  .modal-balance-input:focus{ outline:none; border-color:var(--gold); }
-  .modal-balance-input::placeholder{ color:var(--ivory-dim); opacity:.55; }
-  .modal-warning{
-    font-family:'IBM Plex Mono',monospace; font-size:11px;
-    color:var(--loss); min-height:14px; margin:0 0 16px;
-  }
-  .modal-btn{
-    display:block; width:100%;
-    padding:15px 0; border:none; border-radius:12px;
-    background:linear-gradient(180deg, var(--gold-bright), var(--gold));
-    color:var(--felt-dark);
-    font-weight:700; font-size:15px; letter-spacing:.08em;
-    box-shadow:0 8px 20px rgba(232,185,74,.3);
-  }
-  .modal-btn:not(:disabled):hover{ filter:brightness(1.06); }
-  .modal-fineprint{
-    font-family:'IBM Plex Mono',monospace; font-size:10.5px;
-    color:var(--ivory-dim); opacity:.7;
-    margin:16px 0 0; line-height:1.4;
-  }
-
-  /* ---- flashy bonus round variant ---- */
-  .modal-card.bonus{
-    border-color:transparent;
-    background:
-      linear-gradient(var(--felt), var(--felt)) padding-box,
-      conic-gradient(from 0deg, var(--gold-bright), #ff6b62, var(--gold), var(--win), var(--gold-bright)) border-box;
-    border:3px solid transparent;
-    box-shadow:inset 0 0 70px rgba(0,0,0,.4), 0 0 46px rgba(232,185,74,.5), 0 24px 60px rgba(0,0,0,.6);
-    overflow:hidden;
-  }
-  .modal-card.bonus::before{
-    content:""; position:absolute; inset:0;
-    background-image:repeating-conic-gradient(from 0deg at 50% 0%, rgba(245,214,124,.14) 0deg 6deg, transparent 6deg 18deg);
-    pointer-events:none;
-    animation:bonusRays 14s linear infinite;
-  }
-  @keyframes bonusRays{ to{ transform:rotate(360deg); } }
-  .modal-card.bonus > *{ position:relative; z-index:1; }
-  .bonus-stars{
-    font-size:30px; letter-spacing:.15em;
-    margin:0 0 6px;
-    animation:bonusStars 1.4s ease-in-out infinite;
-  }
-  @keyframes bonusStars{
-    0%,100%{ transform:scale(1); filter:drop-shadow(0 0 6px rgba(245,214,124,.5)); }
-    50%{ transform:scale(1.12); filter:drop-shadow(0 0 16px rgba(245,214,124,.9)); }
-  }
-  .modal-card.bonus h2{
-    font-size:clamp(30px,8vw,44px);
-    animation:bonusGlow 1.6s ease-in-out infinite;
-  }
-  @keyframes bonusGlow{
-    0%,100%{ text-shadow:0 0 8px #fff, 0 0 22px var(--gold-bright), 0 0 44px var(--gold); }
-    50%{ text-shadow:0 0 12px #fff, 0 0 34px var(--gold-bright), 0 0 70px var(--gold); }
-  }
-  .bonus-multiplier{
-    font-family:'Fraunces',serif; font-weight:700;
-    font-size:clamp(52px,16vw,84px);
-    line-height:1;
-    color:#fff;
-    margin:6px 0 4px;
-    text-shadow:0 0 10px #fff, 0 0 26px var(--gold-bright), 0 0 50px var(--gold), 0 0 90px var(--win);
-    animation:bonusPulse 1.2s ease-in-out infinite;
-  }
-  @keyframes bonusPulse{
-    0%,100%{ transform:scale(1) rotate(-2deg); }
-    50%{ transform:scale(1.08) rotate(2deg); }
-  }
-  .bonus-tagline{
-    font-family:'Fraunces',serif; font-style:italic; font-weight:500;
-    font-size:16px; color:var(--gold-bright); margin:0 0 20px;
-  }
-  .modal-card.bonus .modal-btn{
-    animation:bonusBtn 1.4s ease-in-out infinite;
-  }
-  @keyframes bonusBtn{
-    0%,100%{ box-shadow:0 8px 20px rgba(232,185,74,.35); }
-    50%{ box-shadow:0 8px 30px rgba(245,214,124,.75); }
-  }
-
-  /* pending-bonus badge in the bet area */
-  .bonus-badge{
-    display:inline-flex; align-items:center; gap:6px;
-    margin:0 auto 12px;
-    padding:7px 16px; border-radius:999px;
-    background:linear-gradient(90deg, rgba(245,214,124,.18), rgba(127,191,143,.18));
-    border:1px solid rgba(245,214,124,.6);
-    font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:12px;
-    letter-spacing:.06em; color:var(--gold-bright);
-    text-shadow:0 0 10px rgba(245,214,124,.5);
-    animation:bonusBadgePulse 1.4s ease-in-out infinite;
-  }
-  @keyframes bonusBadgePulse{
-    0%,100%{ box-shadow:0 0 0 rgba(245,214,124,0); }
-    50%{ box-shadow:0 0 18px rgba(245,214,124,.5); }
-  }
-
-  @media (prefers-reduced-motion: reduce){
-    .modal-card,
-    .modal-card.bonus::before,
-    .bonus-stars, .modal-card.bonus h2, .bonus-multiplier,
-    .modal-card.bonus .modal-btn, .bonus-badge{ animation:none; }
-  }
+  @keyframes bannerStatic{ 0%{ opacity:0;} 12%{ opacity:1;} 80%{ opacity:1;} 100%{ opacity:0;} }
 </style>
 </head>
 <body>
+<div class="ambient" aria-hidden="true">
+  <span class="glow g1"></span><span class="glow g2"></span><span class="glow g3"></span><span class="glow g4"></span>
+</div>
+<div class="rays" aria-hidden="true"></div>
+
 <canvas id="confetti" aria-hidden="true"></canvas>
+<div id="sfxLayer" aria-hidden="true"></div>
 <div class="celebration" id="celebration" aria-hidden="true">
   <p class="banner-text" id="celebrationText"></p>
 </div>
@@ -787,16 +399,16 @@
 <!-- ============ STARTING-BALANCE PROMPT ============ -->
 <div class="modal-overlay" id="balanceModal" role="dialog" aria-modal="true" aria-labelledby="balanceModalTitle">
   <div class="modal-card">
-    <p class="modal-eyebrow">Welcome to the table</p>
+    <p class="modal-eyebrow">★ VIP table now open ★</p>
     <h2 id="balanceModalTitle">Lucky Parity</h2>
-    <p class="modal-body">Before you sit down — how much are you playing with today? Enter your current balance to begin.</p>
+    <p class="modal-body">Welcome, high roller. How much are you bringing to the table tonight? Enter your bankroll to grab a seat.</p>
     <div class="modal-balance-field">
       <span class="modal-peso">₱</span>
       <input type="number" class="modal-balance-input" id="startBalanceInput" placeholder="5,000" min="1" step="1" inputmode="numeric" autocomplete="off">
     </div>
     <p class="modal-warning" id="balanceModalWarning"></p>
     <button class="modal-btn" id="startGameBtn" disabled>TAKE A SEAT</button>
-    <p class="modal-fineprint">Classroom demonstration — no real money is used. Every peso here is pretend.</p>
+    <p class="modal-perk">🎁 Welcome bonus unlocked · lucky first rounds await</p>
   </div>
 </div>
 
@@ -808,86 +420,102 @@
     <h2 id="bonusModalTitle">BONUS ROUND!</h2>
     <p class="bonus-multiplier">2×</p>
     <p class="bonus-tagline">Your winnings are DOUBLED this round</p>
-    <p class="modal-body">You're on a roll — so this one pays double. Bet up to <strong>₱1,000</strong> and cash in big. Don't let it slip away!</p>
+    <p class="modal-body">You're on fire! 🔥 This one pays double. Bet up to <strong>₱1,000</strong> and cash in big — don't let it slip away!</p>
     <button class="modal-btn" id="bonusStartBtn">LET'S GO 🎲</button>
-    <p class="modal-fineprint">This is exactly the "bonus" hook real gambling apps use to raise your bet. The reveal at the end shows why.</p>
   </div>
 </div>
 
 <div id="app">
 
   <!-- ============ CASINO MODE ============ -->
-  <section class="stage casino-stage" id="casinoStage">
+  <section class="stage casino-stage" id="casinoStage" data-screen-label="Casino table">
     <div class="marquee">
-      <p class="eyebrow">A CLASSROOM DEMONSTRATION · NO REAL MONEY IS USED</p>
-      <h1>LUCKY PARITY</h1>
+      <span class="signframe"><h1>LUCKY PARITY</h1></span>
       <p class="tagline">Two dice. Guess odd or even. Simple, right?</p>
     </div>
 
     <div class="hud">
       <div class="pill balance-pill">
         <span class="pill-label">Balance</span>
-        <span class="pill-value" id="balanceValue">₱100,000</span>
+        <span class="pill-value" id="balanceValue">₱5,000</span>
       </div>
       <div class="pill round-pill">
         <span class="pill-label">Round</span>
         <span class="pill-value" id="roundValue">0</span>
+      </div>
+      <div class="pill streak-pill">
+        <span class="pill-label">Streak</span>
+        <span class="pill-value" id="streakValue">0</span>
       </div>
     </div>
 
     <div class="casino-columns">
      <div class="casino-main">
       <div class="table-felt">
-      <div class="dice-row">
-        <div class="die" id="die1">
-          <span class="pip" data-pos="1"></span><span class="pip" data-pos="2"></span><span class="pip" data-pos="3"></span>
-          <span class="pip" data-pos="4"></span><span class="pip" data-pos="5"></span><span class="pip" data-pos="6"></span>
-          <span class="pip" data-pos="7"></span><span class="pip" data-pos="8"></span><span class="pip" data-pos="9"></span>
+        <div class="dice-row">
+          <div class="reel">
+            <div class="die" id="die1">
+              <span class="pip" data-pos="1"></span><span class="pip" data-pos="2"></span><span class="pip" data-pos="3"></span>
+              <span class="pip" data-pos="4"></span><span class="pip" data-pos="5"></span><span class="pip" data-pos="6"></span>
+              <span class="pip" data-pos="7"></span><span class="pip" data-pos="8"></span><span class="pip" data-pos="9"></span>
+            </div>
+          </div>
+          <div class="reel">
+            <div class="die" id="die2">
+              <span class="pip" data-pos="1"></span><span class="pip" data-pos="2"></span><span class="pip" data-pos="3"></span>
+              <span class="pip" data-pos="4"></span><span class="pip" data-pos="5"></span><span class="pip" data-pos="6"></span>
+              <span class="pip" data-pos="7"></span><span class="pip" data-pos="8"></span><span class="pip" data-pos="9"></span>
+            </div>
+          </div>
         </div>
-        <div class="die" id="die2">
-          <span class="pip" data-pos="1"></span><span class="pip" data-pos="2"></span><span class="pip" data-pos="3"></span>
-          <span class="pip" data-pos="4"></span><span class="pip" data-pos="5"></span><span class="pip" data-pos="6"></span>
-          <span class="pip" data-pos="7"></span><span class="pip" data-pos="8"></span><span class="pip" data-pos="9"></span>
+        <p class="result-line" id="resultLine">Pick a bet size and a guess to begin.</p>
+
+        <div style="text-align:center;">
+          <span class="bonus-badge hidden" id="bonusBadge">⭐ BONUS ROUND — WIN ×2!</span>
         </div>
-      </div>
-      <p class="result-line" id="resultLine">Pick a bet size and a guess to begin.</p>
 
-      <div style="text-align:center;">
-        <span class="bonus-badge hidden" id="bonusBadge">⭐ BONUS ROUND — winnings ×2!</span>
-      </div>
-
-      <div class="bet-row">
-        <span class="bet-label">Bet</span>
-        <div class="chip-select" id="chipSelect">
-          <button class="chip" data-amt="100">₱100</button>
-          <button class="chip" data-amt="500">₱500</button>
-          <button class="chip" data-amt="1000">₱1,000</button>
+        <div class="streak-wrap" id="streakWrap">
+          <div class="streak-head">
+            <span class="streak-title" id="streakTitle">Jackpot Meter</span>
+            <span class="streak-state" id="streakState">Win in a row to heat up</span>
+          </div>
+          <div class="streak-track" id="streakTrack">
+            <span class="streak-seg"></span><span class="streak-seg"></span><span class="streak-seg"></span>
+            <span class="streak-seg"></span><span class="streak-seg"></span>
+          </div>
         </div>
-        <input type="number" class="custom-bet-input" id="customBet" placeholder="Custom ₱ amount" min="1" step="1" inputmode="numeric">
+
+        <div class="bet-row">
+          <span class="bet-label">Bet</span>
+          <div class="chip-select" id="chipSelect">
+            <button class="chip" data-amt="100">₱100</button>
+            <button class="chip" data-amt="500">₱500</button>
+            <button class="chip" data-amt="1000">₱1,000</button>
+          </div>
+          <input type="number" class="custom-bet-input" id="customBet" placeholder="Custom ₱ amount" min="1" step="1" inputmode="numeric">
+        </div>
+        <p class="bet-note" id="betNote"></p>
+        <p class="bet-warning" id="betWarning"></p>
+
+        <div class="guess-row">
+          <button class="guess-btn" id="guessOdd" data-guess="odd">ODD</button>
+          <button class="guess-btn" id="guessEven" data-guess="even">EVEN</button>
+        </div>
+
+        <button class="roll-btn" id="rollBtn" disabled>ROLL THE DICE</button>
       </div>
-      <p class="bet-note" id="betNote"></p>
-      <p class="bet-warning" id="betWarning"></p>
 
-      <div class="guess-row">
-        <button class="guess-btn" id="guessOdd" data-guess="odd">ODD</button>
-        <button class="guess-btn" id="guessEven" data-guess="even">EVEN</button>
+      <div class="stack-wrap">
+        <span class="stack-label">Your chips on the table</span>
+        <div class="chip-stack" id="chipStack"></div>
       </div>
 
-      <button class="roll-btn" id="rollBtn" disabled>ROLL THE DICE</button>
-    </div>
+      <div class="sparkline-wrap">
+        <span class="sparkline-label">Your balance over time</span>
+        <canvas id="sparkline" width="600" height="96"></canvas>
+      </div>
 
-    <div class="sparkline-wrap">
-      <span class="sparkline-label">Your balance over time</span>
-      <canvas id="sparkline" width="600" height="100"></canvas>
-    </div>
-
-    <label class="instructor-toggle">
-      <input type="checkbox" id="instructorToggle">
-      <span>Instructor mode — show the true odds live, each round</span>
-    </label>
-    <div id="instructorPanel" class="instructor-panel hidden"></div>
-
-    <button class="expose-btn" id="exposeBtn">I want to stop — show me how this actually worked</button>
+      <button class="cashout-btn" id="cashOutBtn">Cash out & leave the table →</button>
      </div><!-- /.casino-main -->
 
      <aside class="scoreboard-wrap">
@@ -909,7 +537,7 @@
   </section>
 
   <!-- ============ TRUTH MODE ============ -->
-  <section class="stage truth-stage hidden" id="truthStage">
+  <section class="stage truth-stage hidden" id="truthStage" data-screen-label="Truth reveal">
     <div class="truth-header">
       <span class="stamp">RIGGED</span>
       <h2>How This Game Was Rigged</h2>
@@ -940,7 +568,7 @@
       </div>
       <div class="explain-card">
         <h4>02 — WHY IT WORKS</h4>
-        <p>Early wins build false confidence. Near-misses and streaks trigger the same reward chemistry as real wins. And once you've lost some money, it feels natural to think "I'm due" — that's the sunk-cost trap, and it's designed on purpose.</p>
+        <p>Early wins build false confidence. Near-misses, streak meters and "bonus rounds" trigger the same reward chemistry as real wins. And once you've lost some money, it feels natural to think "I'm due" — that's the sunk-cost trap, and it's designed on purpose.</p>
       </div>
     </div>
 
@@ -964,285 +592,193 @@
   <p class="operator-status" id="operatorStatus">Phase: hook (limit locked)</p>
   <button class="operator-btn rig" id="startRiggingBtn">⚡ Start rigging now</button>
   <button class="operator-btn wipe" id="operatorResetBtn">↺ Reset everything</button>
+  <label class="operator-check">
+    <input type="checkbox" id="instructorToggle">
+    <span>Instructor mode — show true odds live</span>
+  </label>
+  <p id="operatorInstructorPanel" class="hidden"></p>
 </div>
 
 <script>
-(function(){
+document.addEventListener('DOMContentLoaded', function(){
+
   "use strict";
+  const $ = (id) => document.getElementById(id);
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // ---------- win / lose celebration ----------
-  var reduceMotion = window.matchMedia &&
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // ---------- confetti ----------
+  const confettiCanvas = $('confetti');
+  const confettiCtx = confettiCanvas.getContext('2d');
+  const celebrationEl = $('celebration');
+  const celebrationText = $('celebrationText');
+  const sfxLayer = $('sfxLayer');
+  let particles = [];
+  let confettiRunning = false;
+  const WIN_COLORS = ['#ffe08a', '#ffce4a', '#5ff0a0', '#ff2d9b', '#22e6e6', '#ffffff'];
+  const LOSE_COLORS = ['#ff6b62', '#c1443d', '#ffce4a', '#f3eedd'];
 
-  var confettiCanvas = document.getElementById('confetti');
-  var confettiCtx = confettiCanvas.getContext('2d');
-  var celebrationEl = document.getElementById('celebration');
-  var celebrationText = document.getElementById('celebrationText');
-  var particles = [];
-  var confettiRunning = false;
-
-  var WIN_COLORS = ['#f5d67c', '#e8b94a', '#7fbf8f', '#f3eedd', '#ffffff'];
-  var LOSE_COLORS = ['#ff6b62', '#c1443d', '#e8b94a', '#f3eedd'];
-
-  function sizeConfetti(){
-    confettiCanvas.width = window.innerWidth;
-    confettiCanvas.height = window.innerHeight;
-  }
-  window.addEventListener('resize', sizeConfetti);
-  sizeConfetti();
+  function sizeConfetti(){ confettiCanvas.width = window.innerWidth; confettiCanvas.height = window.innerHeight; }
+  window.addEventListener('resize', sizeConfetti); sizeConfetti();
 
   function spawnConfetti(colors, count){
-    var cx = window.innerWidth / 2;
-    var cy = window.innerHeight * 0.42;
-    for (var i = 0; i < count; i++){
-      var angle = Math.random() * Math.PI * 2;
-      var speed = 6 + Math.random() * 11;
-      particles.push({
-        x: cx + (Math.random() - 0.5) * 80,
-        y: cy + (Math.random() - 0.5) * 40,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed - 4,
-        g: 0.28 + Math.random() * 0.12,
-        w: 6 + Math.random() * 7,
-        h: 9 + Math.random() * 9,
-        rot: Math.random() * Math.PI,
-        vr: (Math.random() - 0.5) * 0.4,
-        color: colors[(Math.random() * colors.length) | 0],
-        life: 90 + Math.random() * 50
-      });
+    const cx = window.innerWidth / 2, cy = window.innerHeight * 0.42;
+    for (let i = 0; i < count; i++){
+      const angle = Math.random() * Math.PI * 2, speed = 6 + Math.random() * 11;
+      particles.push({ x: cx + (Math.random()-0.5)*80, y: cy + (Math.random()-0.5)*40,
+        vx: Math.cos(angle)*speed, vy: Math.sin(angle)*speed - 4, g: 0.28 + Math.random()*0.12,
+        w: 6 + Math.random()*7, h: 9 + Math.random()*9, rot: Math.random()*Math.PI,
+        vr: (Math.random()-0.5)*0.4, color: colors[(Math.random()*colors.length)|0], life: 90 + Math.random()*50 });
     }
     if (!confettiRunning){ confettiRunning = true; requestAnimationFrame(tickConfetti); }
   }
-
   function tickConfetti(){
-    confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
-    for (var i = particles.length - 1; i >= 0; i--){
-      var p = particles[i];
-      p.vy += p.g;
-      p.vx *= 0.99;
-      p.x += p.vx;
-      p.y += p.vy;
-      p.rot += p.vr;
-      p.life--;
-      if (p.life <= 0 || p.y > confettiCanvas.height + 40){
-        particles.splice(i, 1);
-        continue;
-      }
-      confettiCtx.save();
-      confettiCtx.translate(p.x, p.y);
-      confettiCtx.rotate(p.rot);
-      confettiCtx.globalAlpha = Math.min(1, p.life / 30);
-      confettiCtx.fillStyle = p.color;
-      confettiCtx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
-      confettiCtx.restore();
+    confettiCtx.clearRect(0,0,confettiCanvas.width,confettiCanvas.height);
+    for (let i = particles.length-1; i>=0; i--){
+      const p = particles[i];
+      p.vy += p.g; p.vx *= 0.99; p.x += p.vx; p.y += p.vy; p.rot += p.vr; p.life--;
+      if (p.life<=0 || p.y>confettiCanvas.height+40){ particles.splice(i,1); continue; }
+      confettiCtx.save(); confettiCtx.translate(p.x,p.y); confettiCtx.rotate(p.rot);
+      confettiCtx.globalAlpha = Math.min(1, p.life/30); confettiCtx.fillStyle = p.color;
+      confettiCtx.fillRect(-p.w/2,-p.h/2,p.w,p.h); confettiCtx.restore();
     }
-    if (particles.length > 0){
-      requestAnimationFrame(tickConfetti);
-    } else {
-      confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
-      confettiRunning = false;
-    }
+    if (particles.length>0) requestAnimationFrame(tickConfetti);
+    else { confettiCtx.clearRect(0,0,confettiCanvas.width,confettiCanvas.height); confettiRunning = false; }
   }
 
-  var bannerTimer = null;
+  // ---------- visual SFX pops ----------
+  const WIN_SFX = ['CHA-CHING!', 'DING DING!', 'JACKPOT!', 'KA-CHING!', 'WINNER!'];
+  const LOSE_SFX = ['AWW!', 'SO CLOSE!', 'ONE MORE!', 'ALMOST!'];
+  function popSfx(isWin){
+    const el = document.createElement('div');
+    el.className = 'sfx ' + (isWin ? 'win' : 'lose');
+    const arr = isWin ? WIN_SFX : LOSE_SFX;
+    el.textContent = arr[(Math.random()*arr.length)|0];
+    el.style.left = (window.innerWidth*0.5 + (Math.random()-0.5)*260) + 'px';
+    el.style.top = (window.innerHeight*0.52 + (Math.random()-0.5)*80) + 'px';
+    sfxLayer.appendChild(el);
+    setTimeout(() => el.remove(), 1200);
+  }
+
+  let bannerTimer = null;
   function flashBanner(isWin){
     celebrationText.innerHTML = (isWin ? 'Winner!' : 'So close!') +
       '<span class="banner-sub">' + (isWin ? 'Feeling lucky? Keep the streak going' : 'You almost had it — one more roll') + '</span>';
     celebrationEl.className = 'celebration ' + (isWin ? 'win' : 'lose');
-    // force reflow so the animation restarts on rapid rounds
     void celebrationEl.offsetWidth;
     celebrationEl.classList.add('show');
     clearTimeout(bannerTimer);
-    bannerTimer = setTimeout(function(){
-      celebrationEl.className = 'celebration';
-    }, reduceMotion ? 1200 : 1600);
+    bannerTimer = setTimeout(() => { celebrationEl.className = 'celebration'; }, reduceMotion ? 1200 : 1600);
   }
-
   function celebrate(isWin, tableEl){
     flashBanner(isWin);
     if (tableEl){
-      var cls = isWin ? 'celebrate' : 'nearmiss';
-      tableEl.classList.remove('celebrate', 'nearmiss');
-      void tableEl.offsetWidth;
-      tableEl.classList.add(cls);
-      setTimeout(function(){ tableEl.classList.remove(cls); }, 1400);
+      const cls = isWin ? 'celebrate' : 'nearmiss';
+      tableEl.classList.remove('celebrate','nearmiss'); void tableEl.offsetWidth; tableEl.classList.add(cls);
+      setTimeout(() => tableEl.classList.remove(cls), 1400);
     }
-    if (!reduceMotion){
-      spawnConfetti(isWin ? WIN_COLORS : LOSE_COLORS, isWin ? 150 : 70);
-    }
+    if (!reduceMotion){ spawnConfetti(isWin ? WIN_COLORS : LOSE_COLORS, isWin ? 150 : 70); popSfx(isWin); }
   }
 
-  // ---------- pip layout ----------
-  var PIP_MAP = {
-    1:[5],
-    2:[1,9],
-    3:[1,5,9],
-    4:[1,3,7,9],
-    5:[1,3,5,7,9],
-    6:[1,3,4,6,7,9]
-  };
-
+  // ---------- pips ----------
+  const PIP_MAP = {1:[5],2:[1,9],3:[1,5,9],4:[1,3,7,9],5:[1,3,5,7,9],6:[1,3,4,6,7,9]};
   function setDieFace(dieEl, value){
-    var lit = PIP_MAP[value] || [];
-    var pips = dieEl.querySelectorAll('.pip');
-    pips.forEach(function(p){
-      var pos = parseInt(p.getAttribute('data-pos'), 10);
-      if (lit.indexOf(pos) !== -1) p.classList.add('lit');
-      else p.classList.remove('lit');
+    const lit = PIP_MAP[value] || [];
+    dieEl.querySelectorAll('.pip').forEach(p => {
+      const pos = parseInt(p.getAttribute('data-pos'),10);
+      p.classList.toggle('lit', lit.indexOf(pos) !== -1);
     });
   }
 
-  // ---------- game config ----------
-  var DEFAULT_BALANCE = 5000;
-  var START_BALANCE = DEFAULT_BALANCE; // set from the player's own answer at the prompt
-  var HOOK_ROUNDS = 4;
-  var HOOK_PROB = 0.82;
-  var GRIND_START_PROB = 0.30;
-  var DECAY_PER_ROUND = 0.045;
-  var FLOOR_PROB = 0.08;
-  var NEW_PLAYER_LIMIT = 1000;
-  var BONUS_ROUND = 4;        // the 4th round is a "bonus" round
-  var BONUS_MULTIPLIER = 2;   // winnings are doubled that round
+  // ---------- config ----------
+  const DEFAULT_BALANCE = 5000;
+  let START_BALANCE = DEFAULT_BALANCE;
+  const HOOK_ROUNDS = 4, HOOK_PROB = 0.82, GRIND_START_PROB = 0.30, DECAY_PER_ROUND = 0.045, FLOOR_PROB = 0.08;
+  const NEW_PLAYER_LIMIT = 1000, BONUS_ROUND = 4, BONUS_MULTIPLIER = 2;
+  const formatPeso = (n) => '₱' + Math.round(n).toLocaleString('en-PH');
 
-  function formatPeso(n){
-    return '₱' + Math.round(n).toLocaleString('en-PH');
-  }
-
-  // ---------- state ----------
-  var state = {
-    balance: START_BALANCE,
-    round: 0,
-    bet: null,
-    guess: null,
-    history: [],
-    instructorMode: false,
-    over: false,
-    grindStartRound: HOOK_ROUNDS,
-    locked: true
-  };
+  let state = { balance: START_BALANCE, round: 0, bet: null, guess: null, history: [],
+    instructorMode: false, over: false, grindStartRound: HOOK_ROUNDS, locked: true };
 
   function computeProb(roundNum){
     if (roundNum <= state.grindStartRound) return HOOK_PROB;
-    var into = roundNum - state.grindStartRound;
-    var p = GRIND_START_PROB - into * DECAY_PER_ROUND;
-    return Math.max(p, FLOOR_PROB);
+    const into = roundNum - state.grindStartRound;
+    return Math.max(GRIND_START_PROB - into * DECAY_PER_ROUND, FLOOR_PROB);
   }
-
   function rollForParity(parity){
-    var d1, d2, sum, tries = 0;
-    do {
-      d1 = 1 + Math.floor(Math.random() * 6);
-      d2 = 1 + Math.floor(Math.random() * 6);
-      sum = d1 + d2;
-      tries++;
-    } while ( ((sum % 2 === 0) ? 'even' : 'odd') !== parity && tries < 200 );
+    let d1, d2, sum, tries = 0;
+    do { d1 = 1 + Math.floor(Math.random()*6); d2 = 1 + Math.floor(Math.random()*6); sum = d1+d2; tries++; }
+    while (((sum%2===0)?'even':'odd') !== parity && tries < 200);
     return [d1, d2];
   }
 
-  // ---------- DOM refs ----------
-  var balanceValue = document.getElementById('balanceValue');
-  var roundValue = document.getElementById('roundValue');
-  var die1 = document.getElementById('die1');
-  var die2 = document.getElementById('die2');
-  var resultLine = document.getElementById('resultLine');
-  var chipSelect = document.getElementById('chipSelect');
-  var customBet = document.getElementById('customBet');
-  var betWarning = document.getElementById('betWarning');
-  var guessOdd = document.getElementById('guessOdd');
-  var guessEven = document.getElementById('guessEven');
-  var rollBtn = document.getElementById('rollBtn');
-  var sparkline = document.getElementById('sparkline');
-  var instructorToggle = document.getElementById('instructorToggle');
-  var instructorPanel = document.getElementById('instructorPanel');
-  var exposeBtn = document.getElementById('exposeBtn');
-  var casinoStage = document.getElementById('casinoStage');
-  var truthStage = document.getElementById('truthStage');
-  var ledgerBody = document.getElementById('ledgerBody');
-  var scoreboardBody = document.getElementById('scoreboardBody');
-  var probChart = document.getElementById('probChart');
-  var resetBtn = document.getElementById('resetBtn');
-  var betNote = document.getElementById('betNote');
-  var operatorDot = document.getElementById('operatorDot');
-  var operatorPanel = document.getElementById('operatorPanel');
-  var operatorStatus = document.getElementById('operatorStatus');
-  var startRiggingBtn = document.getElementById('startRiggingBtn');
-  var operatorResetBtn = document.getElementById('operatorResetBtn');
-  var balanceModal = document.getElementById('balanceModal');
-  var startBalanceInput = document.getElementById('startBalanceInput');
-  var balanceModalWarning = document.getElementById('balanceModalWarning');
-  var startGameBtn = document.getElementById('startGameBtn');
-  var bonusModal = document.getElementById('bonusModal');
-  var bonusStartBtn = document.getElementById('bonusStartBtn');
-  var bonusBadge = document.getElementById('bonusBadge');
+  // ---------- refs ----------
+  const balanceValue=$('balanceValue'), roundValue=$('roundValue'), streakValue=$('streakValue');
+  const die1=$('die1'), die2=$('die2'), resultLine=$('resultLine');
+  const chipSelect=$('chipSelect'), customBet=$('customBet'), betWarning=$('betWarning');
+  const guessOdd=$('guessOdd'), guessEven=$('guessEven'), rollBtn=$('rollBtn');
+  const sparkline=$('sparkline'), chipStack=$('chipStack');
+  const instructorToggle=$('instructorToggle'), instructorPanel=$('operatorInstructorPanel');
+  const cashOutBtn=$('cashOutBtn'), casinoStage=$('casinoStage'), truthStage=$('truthStage');
+  const ledgerBody=$('ledgerBody'), scoreboardBody=$('scoreboardBody'), probChart=$('probChart');
+  const resetBtn=$('resetBtn'), betNote=$('betNote');
+  const operatorDot=$('operatorDot'), operatorPanel=$('operatorPanel'), operatorStatus=$('operatorStatus');
+  const startRiggingBtn=$('startRiggingBtn'), operatorResetBtn=$('operatorResetBtn');
+  const balanceModal=$('balanceModal'), startBalanceInput=$('startBalanceInput');
+  const balanceModalWarning=$('balanceModalWarning'), startGameBtn=$('startGameBtn');
+  const bonusModal=$('bonusModal'), bonusStartBtn=$('bonusStartBtn'), bonusBadge=$('bonusBadge');
+  const streakWrap=$('streakWrap'), streakState=$('streakState'), streakTrack=$('streakTrack');
+  const streakSegs = () => streakTrack.querySelectorAll('.streak-seg');
 
-  setDieFace(die1, 1);
-  setDieFace(die2, 1);
+  const listeners = [];
+  const on = (el, ev, fn) => { el.addEventListener(ev, fn); listeners.push([el, ev, fn]); };
 
-  // ---------- bet chip selection ----------
-  chipSelect.addEventListener('click', function(e){
-    var btn = e.target.closest('.chip');
+  setDieFace(die1, 1); setDieFace(die2, 1);
+
+  // ---------- bet chips ----------
+  on(chipSelect, 'click', (e) => {
+    const btn = e.target.closest('.chip');
     if (!btn || btn.disabled || state.over) return;
-    var amt = parseInt(btn.getAttribute('data-amt'), 10);
-    state.bet = amt;
+    state.bet = parseInt(btn.getAttribute('data-amt'),10);
     customBet.value = '';
-    Array.prototype.forEach.call(chipSelect.querySelectorAll('.chip'), function(c){
-      c.classList.toggle('active', c === btn);
-    });
+    chipSelect.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c === btn));
     refreshRollButton();
   });
-
-  // ---------- custom bet amount ----------
-  customBet.addEventListener('input', function(){
-    var val = parseInt(customBet.value, 10);
-    Array.prototype.forEach.call(chipSelect.querySelectorAll('.chip'), function(c){ c.classList.remove('active'); });
+  on(customBet, 'input', () => {
+    let val = parseInt(customBet.value,10);
+    chipSelect.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
     if (!isNaN(val) && val > 0){
-      if (state.locked && val > NEW_PLAYER_LIMIT){
-        val = NEW_PLAYER_LIMIT;
-        customBet.value = val;
-      }
+      if (state.locked && val > NEW_PLAYER_LIMIT){ val = NEW_PLAYER_LIMIT; customBet.value = val; }
       state.bet = val;
-    } else {
-      state.bet = null;
-    }
+    } else state.bet = null;
     refreshRollButton();
   });
 
-  // ---------- guess selection ----------
-  function selectGuess(g, btn){
+  function selectGuess(g){
     if (state.over) return;
     state.guess = g;
     guessOdd.classList.toggle('active', g === 'odd');
     guessEven.classList.toggle('active', g === 'even');
     refreshRollButton();
   }
-  guessOdd.addEventListener('click', function(){ selectGuess('odd', guessOdd); });
-  guessEven.addEventListener('click', function(){ selectGuess('even', guessEven); });
+  on(guessOdd, 'click', () => selectGuess('odd'));
+  on(guessEven, 'click', () => selectGuess('even'));
 
   function refreshRollButton(){
-    var ready = state.bet && state.guess && !state.over && state.bet <= state.balance;
+    const ready = state.bet && state.guess && !state.over && state.bet <= state.balance;
     rollBtn.disabled = !ready;
-    if (state.bet && state.bet > state.balance){
-      betWarning.textContent = "You don't have " + formatPeso(state.bet) + " left to bet.";
-    } else {
-      betWarning.textContent = '';
-    }
+    betWarning.textContent = (state.bet && state.bet > state.balance)
+      ? "You don't have " + formatPeso(state.bet) + " left to bet." : '';
   }
 
-  // ---------- new-player bet limit (lifted once the grind phase starts) ----------
   function refreshBetLocks(){
-    var wasLocked = state.locked;
+    const wasLocked = state.locked;
     state.locked = state.round < state.grindStartRound;
-
-    Array.prototype.forEach.call(chipSelect.querySelectorAll('.chip'), function(c){
-      var amt = parseInt(c.getAttribute('data-amt'), 10);
-      var shouldDisable = state.locked && amt > NEW_PLAYER_LIMIT;
-      c.disabled = shouldDisable;
-      if (shouldDisable && c.classList.contains('active')){
-        c.classList.remove('active');
-        if (state.bet === amt) state.bet = null;
-      }
+    chipSelect.querySelectorAll('.chip').forEach(c => {
+      const amt = parseInt(c.getAttribute('data-amt'),10);
+      const disable = state.locked && amt > NEW_PLAYER_LIMIT;
+      c.disabled = disable;
+      if (disable && c.classList.contains('active')){ c.classList.remove('active'); if (state.bet===amt) state.bet = null; }
     });
-
     if (state.locked){
       customBet.setAttribute('max', NEW_PLAYER_LIMIT);
       if (state.bet && state.bet > NEW_PLAYER_LIMIT){ state.bet = null; customBet.value = ''; }
@@ -1252,351 +788,279 @@
       customBet.removeAttribute('max');
       betNote.textContent = '🎉 Limit lifted — bet up to ' + formatPeso(100000) + ' now!';
       betNote.classList.add('flash');
-      setTimeout(function(){ betNote.classList.remove('flash'); betNote.textContent = ''; }, 3500);
+      setTimeout(() => { betNote.classList.remove('flash'); betNote.textContent = ''; }, 3500);
     } else if (!betNote.classList.contains('flash')){
-      customBet.removeAttribute('max');
-      betNote.textContent = '';
+      customBet.removeAttribute('max'); betNote.textContent = '';
     }
-
     refreshRollButton();
   }
 
   function updateOperatorStatus(){
-    var nextRound = state.round + 1;
-    var inGrind = nextRound > state.grindStartRound;
+    const inGrind = (state.round + 1) > state.grindStartRound;
     operatorStatus.textContent = 'Phase: ' + (inGrind ? 'rigged (unlocked)' : 'hook (limit locked)') + ' · round ' + state.round;
   }
 
-  // ---------- instructor mode ----------
-  instructorToggle.addEventListener('change', function(){
+  on(instructorToggle, 'change', () => {
     state.instructorMode = instructorToggle.checked;
     instructorPanel.classList.toggle('hidden', !state.instructorMode);
     updateInstructorPanel();
   });
-
   function updateInstructorPanel(){
     if (!state.instructorMode) return;
-    var nextRound = state.round + 1;
-    var prob = computeProb(nextRound);
-    var phase = nextRound <= state.grindStartRound ? 'HOOK PHASE' : 'GRIND PHASE';
-    instructorPanel.textContent = 'Next roll — phase: ' + phase + ' · true win probability: ' + Math.round(prob * 100) + '%';
+    const nextRound = state.round + 1, prob = computeProb(nextRound);
+    const phase = nextRound <= state.grindStartRound ? 'HOOK PHASE' : 'GRIND PHASE';
+    instructorPanel.textContent = 'Next roll — ' + phase + ' · true win prob: ' + Math.round(prob*100) + '%';
+  }
+
+  // ---------- streak / jackpot meter ----------
+  function currentStreak(){
+    let s = 0;
+    for (let i = state.history.length-1; i>=0; i--){ if (state.history[i].win) s++; else break; }
+    return s;
+  }
+  function updateStreakMeter(){
+    const s = currentStreak();
+    streakValue.textContent = s;
+    const segs = streakSegs(); const cap = segs.length;
+    segs.forEach((seg,i) => seg.classList.toggle('on', i < Math.min(s, cap)));
+    streakWrap.classList.toggle('hot', s >= 3);
+    streakWrap.classList.toggle('jackpot', s >= cap);
+    if (s >= cap) streakState.textContent = '🎉 JACKPOT STREAK!';
+    else if (s >= 3) streakState.textContent = '🔥 You\'re on fire!';
+    else if (s > 0) streakState.textContent = s + ' in a row — keep going';
+    else streakState.textContent = 'Win in a row to heat up';
+  }
+
+  // ---------- chip stack ----------
+  const STACK_TIERS = [
+    { v:5000, cls:'sc-gold' }, { v:1000, cls:'sc-green' }, { v:500, cls:'sc-blue' }, { v:100, cls:'sc-red' }
+  ];
+  function renderChipStack(){
+    chipStack.innerHTML = '';
+    let remain = Math.round(state.balance);
+    STACK_TIERS.forEach(tier => {
+      let count = Math.floor(remain / tier.v);
+      remain -= count * tier.v;
+      count = Math.min(count, 9); // cap column height
+      if (count <= 0) return;
+      const col = document.createElement('div');
+      col.className = 'stack-col';
+      for (let i=0;i<count;i++){ const c = document.createElement('span'); c.className = 'stack-chip ' + tier.cls; col.appendChild(c); }
+      const label = document.createElement('span');
+      label.className = 'stack-label'; label.style.marginTop = '6px'; label.textContent = '₱' + tier.v.toLocaleString('en-PH');
+      col.appendChild(label);
+      chipStack.appendChild(col);
+    });
+    if (!chipStack.children.length){
+      const p = document.createElement('span'); p.className='stack-label'; p.textContent = 'Out of chips'; chipStack.appendChild(p);
+    }
   }
 
   // ---------- roll ----------
-  rollBtn.addEventListener('click', function(){
+  let reelTimer = null;
+  on(rollBtn, 'click', () => {
     if (rollBtn.disabled) return;
     rollBtn.disabled = true;
-
-    die1.classList.add('rolling');
-    die2.classList.add('rolling');
-    resultLine.className = 'result-line';
-    resultLine.textContent = 'Rolling...';
-
-    setTimeout(function(){
-      die1.classList.remove('rolling');
-      die2.classList.remove('rolling');
+    die1.classList.add('rolling'); die2.classList.add('rolling');
+    resultLine.className = 'result-line'; resultLine.textContent = 'Rolling...';
+    // slot-reel face cycling
+    clearInterval(reelTimer);
+    if (!reduceMotion){
+      reelTimer = setInterval(() => {
+        setDieFace(die1, 1 + Math.floor(Math.random()*6));
+        setDieFace(die2, 1 + Math.floor(Math.random()*6));
+      }, 70);
+    }
+    setTimeout(() => {
+      clearInterval(reelTimer);
+      die1.classList.remove('rolling'); die2.classList.remove('rolling');
       resolveRound();
     }, 560);
   });
 
   function resolveRound(){
     state.round += 1;
-    var prob = computeProb(state.round);
-    var win = Math.random() < prob;
-    var desiredParity = win ? state.guess : (state.guess === 'odd' ? 'even' : 'odd');
-    var dice = rollForParity(desiredParity);
-    var d1 = dice[0], d2 = dice[1], sum = d1 + d2;
-    var parity = (sum % 2 === 0) ? 'even' : 'odd';
+    const prob = computeProb(state.round);
+    const win = Math.random() < prob;
+    const desiredParity = win ? state.guess : (state.guess === 'odd' ? 'even' : 'odd');
+    const [d1, d2] = rollForParity(desiredParity);
+    const sum = d1 + d2, parity = (sum%2===0) ? 'even' : 'odd';
+    setDieFace(die1, d1); setDieFace(die2, d2);
 
-    setDieFace(die1, d1);
-    setDieFace(die2, d2);
-
-    var bet = state.bet;
-    var isBonus = state.round === BONUS_ROUND;
-    var payout = isBonus ? bet * BONUS_MULTIPLIER : bet;
-    if (win) state.balance += payout;
-    else state.balance -= bet;
+    const bet = state.bet, isBonus = state.round === BONUS_ROUND;
+    const payout = isBonus ? bet * BONUS_MULTIPLIER : bet;
+    if (win) state.balance += payout; else state.balance -= bet;
     if (state.balance < 0) state.balance = 0;
 
-    state.history.push({
-      round: state.round, guess: state.guess, d1: d1, d2: d2, sum: sum,
-      parity: parity, win: win, bet: bet, bonus: isBonus, trueProb: prob, balanceAfter: state.balance
-    });
+    state.history.push({ round: state.round, guess: state.guess, d1, d2, sum, parity, win, bet,
+      bonus: isBonus, trueProb: prob, balanceAfter: state.balance });
 
     resultLine.textContent = d1 + ' + ' + d2 + ' = ' + sum + ' (' + parity.toUpperCase() + ') — you ' +
-      (win ? 'won ' + formatPeso(payout) + (isBonus ? ' (2× bonus!)' : '')
-           : 'lost ' + formatPeso(bet));
+      (win ? 'won ' + formatPeso(payout) + (isBonus ? ' (2× bonus!)' : '') : 'lost ' + formatPeso(bet));
     resultLine.classList.add(win ? 'win' : 'lose');
-    celebrate(win, document.querySelector('.table-felt'));
+    celebrate(win, casinoStage.querySelector('.table-felt'));
 
     balanceValue.textContent = formatPeso(state.balance);
     roundValue.textContent = state.round;
 
-    // clear the odd/even guess so the player must consciously choose again
     state.guess = null;
-    guessOdd.classList.remove('active');
-    guessEven.classList.remove('active');
+    guessOdd.classList.remove('active'); guessEven.classList.remove('active');
 
-    updateScoreboard();
-    drawSparkline();
-    updateInstructorPanel();
-    updateOperatorStatus();
+    updateScoreboard(); drawSparkline(); renderChipStack(); updateStreakMeter();
+    updateInstructorPanel(); updateOperatorStatus();
 
     if (state.balance <= 0){
-      // no pesos left to bet — but the game only ends when the player chooses to stop
-      resultLine.textContent += ' — you\'re out of pesos. Click "I want to stop" below to see how this worked.';
+      resultLine.textContent += ' — you\'re out of chips. Hit "Cash out" below.';
     }
-    refreshBetLocks();
-    updateBonusIndicator();
+    refreshBetLocks(); updateBonusIndicator();
 
-    // once round 3 is done, hype up the round-4 "bonus" (the classic raise-your-bet hook).
-    // brief delay so the round-3 result lands before the pop-up takes over.
     if (state.round === BONUS_ROUND - 1 && state.balance > 0 && !state.over){
       setTimeout(showBonusModal, 900);
     }
   }
 
-  // ---------- bonus round dialog + badge ----------
   function updateBonusIndicator(){
-    var nextRound = state.round + 1;
-    var pending = nextRound === BONUS_ROUND && !state.over && state.balance > 0;
+    const pending = (state.round + 1) === BONUS_ROUND && !state.over && state.balance > 0;
     bonusBadge.classList.toggle('hidden', !pending);
   }
+  function showBonusModal(){ bonusModal.classList.remove('hidden'); }
+  on(bonusStartBtn, 'click', () => bonusModal.classList.add('hidden'));
 
-  function showBonusModal(){
-    bonusModal.classList.remove('hidden');
-  }
-  bonusStartBtn.addEventListener('click', function(){
-    bonusModal.classList.add('hidden');
-  });
-
-  // ---------- in-game scoreboard (no true odds shown) ----------
   function updateScoreboard(){
     if (state.history.length === 0){
-      scoreboardBody.innerHTML =
-        '<tr><td class="scoreboard-empty" colspan="5">No rounds played yet — place a bet and roll.</td></tr>';
+      scoreboardBody.innerHTML = '<tr><td class="scoreboard-empty" colspan="5">No rounds played yet — place a bet and roll.</td></tr>';
       return;
     }
     scoreboardBody.innerHTML = '';
-    // newest round first so the latest result is always in view
-    state.history.slice().reverse().forEach(function(h){
-      var tr = document.createElement('tr');
-      tr.innerHTML =
-        '<td>' + h.round + '</td>' +
-        '<td>' + h.guess.toUpperCase() + '</td>' +
-        '<td>' + h.d1 + '+' + h.d2 + '=' + h.sum + '</td>' +
-        '<td class="' + (h.win ? 'win' : 'lose') + '">' + (h.win ? 'WIN' : 'LOSE') + '</td>' +
-        '<td>' + formatPeso(h.bet) + (h.bonus ? ' <span title="bonus round — winnings doubled">⭐×2</span>' : '') + '</td>';
+    state.history.slice().reverse().forEach(h => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = '<td>'+h.round+'</td><td>'+h.guess.toUpperCase()+'</td><td>'+h.d1+'+'+h.d2+'='+h.sum+'</td>' +
+        '<td class="'+(h.win?'win':'lose')+'">'+(h.win?'WIN':'LOSE')+'</td>' +
+        '<td>'+formatPeso(h.bet)+(h.bonus?' <span title="bonus round">⭐×2</span>':'')+'</td>';
       scoreboardBody.appendChild(tr);
     });
   }
 
-  // ---------- sparkline ----------
   function drawSparkline(){
-    var ctx = sparkline.getContext('2d');
-    var w = sparkline.width, h = sparkline.height;
-    ctx.clearRect(0, 0, w, h);
-
-    var points = [{balanceAfter: START_BALANCE}].concat(state.history);
-    var values = points.map(function(p){ return p.balanceAfter; });
-    var max = Math.max.apply(null, values.concat([START_BALANCE])) * 1.1;
-    var min = 0;
-
-    function xFor(i){ return (i / Math.max(points.length - 1, 1)) * (w - 20) + 10; }
-    function yFor(v){ return h - 14 - ((v - min) / (max - min || 1)) * (h - 24); }
-
-    // baseline
-    ctx.strokeStyle = 'rgba(232,185,74,0.35)';
-    ctx.setLineDash([4,4]);
-    ctx.beginPath();
-    ctx.moveTo(10, yFor(START_BALANCE));
-    ctx.lineTo(w - 10, yFor(START_BALANCE));
+    const ctx = sparkline.getContext('2d');
+    const w = sparkline.width, h = sparkline.height;
+    ctx.clearRect(0,0,w,h);
+    const points = [{balanceAfter: START_BALANCE}].concat(state.history);
+    const values = points.map(p => p.balanceAfter);
+    const max = Math.max.apply(null, values.concat([START_BALANCE])) * 1.1, min = 0;
+    const xFor = (i) => (i/Math.max(points.length-1,1))*(w-20)+10;
+    const yFor = (v) => h-14-((v-min)/(max-min||1))*(h-24);
+    ctx.strokeStyle='rgba(255,206,74,0.3)'; ctx.setLineDash([4,4]);
+    ctx.beginPath(); ctx.moveTo(10,yFor(START_BALANCE)); ctx.lineTo(w-10,yFor(START_BALANCE)); ctx.stroke(); ctx.setLineDash([]);
+    ctx.strokeStyle='#ffce4a'; ctx.lineWidth=2; ctx.beginPath();
+    points.forEach((p,i) => { const x=xFor(i),y=yFor(p.balanceAfter); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
     ctx.stroke();
-    ctx.setLineDash([]);
-
-    // line
-    ctx.strokeStyle = '#e8b94a';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    points.forEach(function(p, i){
-      var x = xFor(i), y = yFor(p.balanceAfter);
-      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-    });
-    ctx.stroke();
-
-    // last point dot
-    var lastIdx = points.length - 1;
-    ctx.fillStyle = '#f5d67c';
-    ctx.beginPath();
-    ctx.arc(xFor(lastIdx), yFor(points[lastIdx].balanceAfter), 3.5, 0, Math.PI * 2);
-    ctx.fill();
+    const last = points.length-1;
+    ctx.fillStyle='#ffe08a'; ctx.beginPath(); ctx.arc(xFor(last),yFor(points[last].balanceAfter),3.5,0,Math.PI*2); ctx.fill();
   }
 
-  // ---------- truth reveal ----------
   function buildLedger(){
     ledgerBody.innerHTML = '';
-    state.history.forEach(function(h){
-      var tr = document.createElement('tr');
-      tr.innerHTML =
-        '<td>' + h.round + '</td>' +
-        '<td>' + h.guess.toUpperCase() + '</td>' +
-        '<td>' + h.d1 + '+' + h.d2 + '=' + h.sum + '</td>' +
-        '<td class="' + (h.win ? 'win' : 'lose') + '">' + (h.win ? 'WIN' : 'LOSE') + '</td>' +
-        '<td>' + formatPeso(h.bet) + (h.bonus ? ' ⭐×2' : '') + '</td>' +
-        '<td>' + Math.round(h.trueProb * 100) + '%</td>';
+    state.history.forEach(h => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = '<td>'+h.round+'</td><td>'+h.guess.toUpperCase()+'</td><td>'+h.d1+'+'+h.d2+'='+h.sum+'</td>' +
+        '<td class="'+(h.win?'win':'lose')+'">'+(h.win?'WIN':'LOSE')+'</td>' +
+        '<td>'+formatPeso(h.bet)+(h.bonus?' ⭐×2':'')+'</td><td>'+Math.round(h.trueProb*100)+'%</td>';
       ledgerBody.appendChild(tr);
     });
   }
-
   function drawProbChart(){
-    var ctx = probChart.getContext('2d');
-    var w = probChart.width, h = probChart.height;
-    ctx.clearRect(0, 0, w, h);
-
-    var data = state.history;
-    if (data.length === 0) return;
-
-    function xFor(i){ return (i / Math.max(data.length - 1, 1)) * (w - 30) + 20; }
-    function yFor(p){ return h - 20 - (p * (h - 34)); }
-
-    // fair-odds reference line at 50%
-    ctx.strokeStyle = 'rgba(236,231,216,0.4)';
-    ctx.setLineDash([5,5]);
-    ctx.beginPath();
-    ctx.moveTo(20, yFor(0.5));
-    ctx.lineTo(w - 10, yFor(0.5));
+    const ctx = probChart.getContext('2d');
+    const w = probChart.width, h = probChart.height;
+    ctx.clearRect(0,0,w,h);
+    const data = state.history; if (data.length === 0) return;
+    const xFor=(i)=>(i/Math.max(data.length-1,1))*(w-30)+20;
+    const yFor=(p)=>h-20-(p*(h-34));
+    ctx.strokeStyle='rgba(236,231,216,0.4)'; ctx.setLineDash([5,5]);
+    ctx.beginPath(); ctx.moveTo(20,yFor(0.5)); ctx.lineTo(w-10,yFor(0.5)); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle='rgba(236,231,216,0.6)'; ctx.font='10px IBM Plex Mono, monospace';
+    ctx.fillText('fair coin-flip odds (50%)', 22, yFor(0.5)-6);
+    ctx.strokeStyle='#b23a2e'; ctx.lineWidth=2; ctx.beginPath();
+    data.forEach((pt,i)=>{ const x=xFor(i),y=yFor(pt.trueProb); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
     ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.fillStyle = 'rgba(236,231,216,0.6)';
-    ctx.font = '10px IBM Plex Mono, monospace';
-    ctx.fillText('fair coin-flip odds (50%)', 22, yFor(0.5) - 6);
-
-    // true probability line
-    ctx.strokeStyle = '#b23a2e';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    data.forEach(function(pt, i){
-      var x = xFor(i), y = yFor(pt.trueProb);
-      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-    });
-    ctx.stroke();
-
-    ctx.fillStyle = '#e07a6f';
-    data.forEach(function(pt, i){
-      var x = xFor(i), y = yFor(pt.trueProb);
-      ctx.beginPath();
-      ctx.arc(x, y, 2.4, 0, Math.PI * 2);
-      ctx.fill();
-    });
+    ctx.fillStyle='#e07a6f';
+    data.forEach((pt,i)=>{ const x=xFor(i),y=yFor(pt.trueProb); ctx.beginPath(); ctx.arc(x,y,2.4,0,Math.PI*2); ctx.fill(); });
   }
-
   function revealTruth(){
     buildLedger();
     casinoStage.classList.add('hidden');
     truthStage.classList.remove('hidden');
     document.body.classList.add('truth-active');
-    // draw after layout so canvas has real width
-    requestAnimationFrame(function(){
-      drawProbChart();
-    });
-    window.scrollTo({top: 0, behavior: 'smooth'});
+    requestAnimationFrame(drawProbChart);
+    window.scrollTo({top:0, behavior:'smooth'});
   }
+  on(cashOutBtn, 'click', revealTruth);
 
-  exposeBtn.addEventListener('click', revealTruth);
-
-  // ---------- reset ----------
   function resetGame(){
-    state = {
-      balance: START_BALANCE, round: 0, bet: null, guess: null,
-      history: [], instructorMode: instructorToggle.checked, over: false,
-      grindStartRound: HOOK_ROUNDS, locked: true
-    };
+    state = { balance: START_BALANCE, round: 0, bet: null, guess: null, history: [],
+      instructorMode: instructorToggle.checked, over: false, grindStartRound: HOOK_ROUNDS, locked: true };
     balanceValue.textContent = formatPeso(state.balance);
     roundValue.textContent = state.round;
-    resultLine.textContent = 'Pick a bet size and a guess to begin.';
-    resultLine.className = 'result-line';
-    setDieFace(die1, 1);
-    setDieFace(die2, 1);
-    Array.prototype.forEach.call(chipSelect.querySelectorAll('.chip'), function(c){ c.classList.remove('active'); });
-    customBet.value = '';
-    betWarning.textContent = '';
-    guessOdd.classList.remove('active');
-    guessEven.classList.remove('active');
+    resultLine.textContent = 'Pick a bet size and a guess to begin.'; resultLine.className = 'result-line';
+    setDieFace(die1, 1); setDieFace(die2, 1);
+    chipSelect.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    customBet.value = ''; betWarning.textContent = '';
+    guessOdd.classList.remove('active'); guessEven.classList.remove('active');
     rollBtn.disabled = true;
     document.body.classList.remove('truth-active');
-    truthStage.classList.add('hidden');
-    casinoStage.classList.remove('hidden');
+    truthStage.classList.add('hidden'); casinoStage.classList.remove('hidden');
     bonusModal.classList.add('hidden');
-    refreshBetLocks();
-    updateScoreboard();
-    updateBonusIndicator();
-    drawSparkline();
-    updateInstructorPanel();
-    updateOperatorStatus();
-    window.scrollTo({top: 0, behavior: 'smooth'});
+    refreshBetLocks(); updateScoreboard(); updateBonusIndicator();
+    drawSparkline(); renderChipStack(); updateStreakMeter();
+    updateInstructorPanel(); updateOperatorStatus();
+    window.scrollTo({top:0, behavior:'smooth'});
   }
-
-  // "Play again" clears the table and re-asks the starting balance —
-  // a fresh game always begins by asking what you're playing with.
   function restartGame(){
     resetGame();
-    startBalanceInput.value = '';
-    startGameBtn.disabled = true;
-    balanceModalWarning.textContent = '';
+    startBalanceInput.value = ''; startGameBtn.disabled = true; balanceModalWarning.textContent = '';
     balanceModal.classList.remove('hidden');
-    try { startBalanceInput.focus(); } catch (e) {}
+    try { startBalanceInput.focus(); } catch(e){}
   }
-  resetBtn.addEventListener('click', restartGame);
+  on(resetBtn, 'click', restartGame);
 
-  // ---------- hidden operator controls (booth staff only) ----------
-  operatorDot.addEventListener('click', function(){
-    operatorPanel.classList.toggle('hidden');
-  });
-
+  on(operatorDot, 'click', () => operatorPanel.classList.toggle('hidden'));
   function startRiggingNow(){
     if (state.over) return;
     state.grindStartRound = state.round;
-    refreshBetLocks();
-    updateInstructorPanel();
-    updateOperatorStatus();
-    var original = startRiggingBtn.textContent;
+    refreshBetLocks(); updateInstructorPanel(); updateOperatorStatus();
+    const original = startRiggingBtn.textContent;
     startRiggingBtn.textContent = '✓ Rigging started';
-    setTimeout(function(){ startRiggingBtn.textContent = original; }, 1500);
+    setTimeout(() => startRiggingBtn.textContent = original, 1500);
   }
-  startRiggingBtn.addEventListener('click', startRiggingNow);
-  operatorResetBtn.addEventListener('click', restartGame);
+  on(startRiggingBtn, 'click', startRiggingNow);
+  on(operatorResetBtn, 'click', restartGame);
 
-  // ---------- starting-balance prompt (shown before every game) ----------
-  function readStartBalance(){
-    var v = parseInt(startBalanceInput.value, 10);
-    return (!isNaN(v) && v > 0) ? v : null;
-  }
-  startBalanceInput.addEventListener('input', function(){
-    var v = readStartBalance();
+  function readStartBalance(){ const v = parseInt(startBalanceInput.value,10); return (!isNaN(v)&&v>0)?v:null; }
+  on(startBalanceInput, 'input', () => {
+    const v = readStartBalance();
     startGameBtn.disabled = v === null;
-    balanceModalWarning.textContent =
-      (startBalanceInput.value.trim() !== '' && v === null) ? 'Enter a balance greater than ₱0.' : '';
+    balanceModalWarning.textContent = (startBalanceInput.value.trim() !== '' && v === null) ? 'Enter a balance greater than ₱0.' : '';
   });
-  startBalanceInput.addEventListener('keydown', function(e){
-    if (e.key === 'Enter' && !startGameBtn.disabled) startGame();
-  });
+  on(startBalanceInput, 'keydown', (e) => { if (e.key === 'Enter' && !startGameBtn.disabled) startGame(); });
   function startGame(){
-    var v = readStartBalance();
-    if (v === null) return;
-    START_BALANCE = v;      // the player's own answer becomes the starting stack
-    balanceModal.classList.add('hidden');
-    resetGame();            // rebuild fresh state around the chosen balance
+    const v = readStartBalance(); if (v === null) return;
+    START_BALANCE = v; balanceModal.classList.add('hidden'); resetGame();
   }
-  startGameBtn.addEventListener('click', startGame);
+  on(startGameBtn, 'click', startGame);
 
-  // initial paint (behind the balance prompt until the player takes a seat)
+  // initial paint
   balanceValue.textContent = formatPeso(state.balance);
-  refreshBetLocks();
-  updateBonusIndicator();
-  updateOperatorStatus();
-  drawSparkline();
-  try { startBalanceInput.focus(); } catch (e) {}
-})();
+  refreshBetLocks(); updateBonusIndicator(); updateOperatorStatus();
+  drawSparkline(); renderChipStack(); updateStreakMeter();
+  try { startBalanceInput.focus(); } catch(e){}
+
+  // teardown for hot-reload
+  return () => {
+    listeners.forEach(([el,ev,fn]) => el.removeEventListener(ev,fn));
+    clearInterval(reelTimer); clearTimeout(bannerTimer);
+    window.__luckyParityInit = false;
+  };
+});
 </script>
 </body>
 </html>
