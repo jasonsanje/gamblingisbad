@@ -694,6 +694,7 @@ document.addEventListener('DOMContentLoaded', function(){
   let START_BALANCE = DEFAULT_BALANCE;
   const HOOK_ROUNDS = 4, HOOK_PROB = 0.82, GRIND_START_PROB = 0.30, DECAY_PER_ROUND = 0.045, FLOOR_PROB = 0.08;
   const NEW_PLAYER_LIMIT = 1000, BONUS_ROUND = 4, BONUS_MULTIPLIER = 2;
+  const PITY_PER_LOSS = 0.04, PITY_CAP = 0.20, PROB_CEIL = 0.95;
   const formatPeso = (n) => '₱' + Math.round(n).toLocaleString('en-PH');
 
   let state = { balance: START_BALANCE, round: 0, bet: null, guess: null, history: [],
@@ -704,6 +705,16 @@ document.addEventListener('DOMContentLoaded', function(){
     const into = roundNum - state.grindStartRound;
     return Math.max(GRIND_START_PROB - into * DECAY_PER_ROUND, FLOOR_PROB);
   }
+
+  // Trailing consecutive losses feed a "pity" comeback bonus: each loss nudges the
+  // next roll's odds up (capped), and any win snaps you straight back to the grind.
+  function currentLossStreak(){
+    let s = 0;
+    for (let i = state.history.length-1; i>=0; i--){ if (!state.history[i].win) s++; else break; }
+    return s;
+  }
+  function pityBonus(){ return Math.min(currentLossStreak() * PITY_PER_LOSS, PITY_CAP); }
+  function effectiveProb(roundNum){ return Math.min(computeProb(roundNum) + pityBonus(), PROB_CEIL); }
   function rollForParity(parity){
     let d1, d2, sum, tries = 0;
     do { d1 = 1 + Math.floor(Math.random()*6); d2 = 1 + Math.floor(Math.random()*6); sum = d1+d2; tries++; }
@@ -807,9 +818,11 @@ document.addEventListener('DOMContentLoaded', function(){
   });
   function updateInstructorPanel(){
     if (!state.instructorMode) return;
-    const nextRound = state.round + 1, prob = computeProb(nextRound);
+    const nextRound = state.round + 1, prob = effectiveProb(nextRound);
     const phase = nextRound <= state.grindStartRound ? 'HOOK PHASE' : 'GRIND PHASE';
-    instructorPanel.textContent = 'Next roll — ' + phase + ' · true win prob: ' + Math.round(prob*100) + '%';
+    const pity = pityBonus();
+    const pityNote = pity > 0 ? ' (+' + Math.round(pity*100) + '% pity)' : '';
+    instructorPanel.textContent = 'Next roll — ' + phase + ' · true win prob: ' + Math.round(prob*100) + '%' + pityNote;
   }
 
   // ---------- streak / jackpot meter ----------
@@ -880,7 +893,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
   function resolveRound(){
     state.round += 1;
-    const prob = computeProb(state.round);
+    const prob = effectiveProb(state.round);
     const win = Math.random() < prob;
     const desiredParity = win ? state.guess : (state.guess === 'odd' ? 'even' : 'odd');
     const [d1, d2] = rollForParity(desiredParity);
