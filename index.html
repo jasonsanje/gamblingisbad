@@ -498,12 +498,124 @@
   }
   .reset-btn:hover{ background:var(--gold); color:var(--ink-bg); }
 
+  /* ---------- WIN / LOSE CELEBRATION ---------- */
+  #confetti{
+    position:fixed; inset:0;
+    width:100%; height:100%;
+    pointer-events:none;
+    z-index:2000;
+  }
+
+  /* neon marquee bulbs framing the table on a result */
+  .table-felt{ position:relative; }
+  .table-felt::before{
+    content:"";
+    position:absolute; inset:-6px;
+    border-radius:24px;
+    padding:2px;
+    background:transparent;
+    pointer-events:none;
+    opacity:0;
+    transition:opacity .3s ease;
+    /* dashed bulb string, animated via background-position */
+    background-image:repeating-linear-gradient(90deg, var(--bulb) 0 7px, transparent 7px 18px);
+    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor;
+            mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            mask-composite:exclude;
+    background-size:36px 100%;
+  }
+  .table-felt.celebrate::before,
+  .table-felt.nearmiss::before{ opacity:1; animation:bulbChase .6s linear infinite; }
+  .table-felt.celebrate{ --bulb:var(--gold-bright); box-shadow:inset 0 0 60px rgba(0,0,0,.35), 0 0 46px rgba(232,185,74,.55), 0 18px 40px rgba(0,0,0,.4); }
+  .table-felt.nearmiss{ --bulb:var(--loss); animation:tableShake .5s ease; box-shadow:inset 0 0 60px rgba(0,0,0,.35), 0 0 40px rgba(193,68,61,.5), 0 18px 40px rgba(0,0,0,.4); }
+  @keyframes bulbChase{ to{ background-position:36px 0; } }
+  @keyframes tableShake{
+    0%,100%{ transform:translateX(0); }
+    15%{ transform:translateX(-7px); }
+    30%{ transform:translateX(6px); }
+    45%{ transform:translateX(-5px); }
+    60%{ transform:translateX(4px); }
+    75%{ transform:translateX(-2px); }
+  }
+
+  .result-line.win{ color:var(--win); text-shadow:0 0 12px rgba(127,191,143,.75); }
+  .result-line.lose{ color:var(--loss); text-shadow:0 0 10px rgba(193,68,61,.6); }
+
+  /* full-screen neon banner that pops on a result */
+  .celebration{
+    position:fixed; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    pointer-events:none;
+    z-index:2100;
+    opacity:0;
+  }
+  .celebration.show{ animation:banner 1.6s cubic-bezier(.2,.7,.2,1) forwards; }
+  .celebration .banner-text{
+    font-family:'Fraunces',serif;
+    font-weight:700;
+    font-size:clamp(52px,15vw,132px);
+    letter-spacing:.02em;
+    line-height:.92;
+    text-align:center;
+    text-transform:uppercase;
+  }
+  .celebration.win .banner-text{
+    color:var(--gold-bright);
+    animation:neonPulse 1.6s ease-in-out;
+  }
+  .celebration.lose .banner-text{
+    color:#ff6b62;
+    animation:neonPulseRed 1.6s ease-in-out;
+  }
+  .celebration .banner-sub{
+    display:block;
+    font-family:'IBM Plex Mono',monospace;
+    font-weight:600;
+    font-size:clamp(12px,3vw,18px);
+    letter-spacing:.32em;
+    margin-top:14px;
+    color:var(--ivory);
+    text-shadow:0 0 12px rgba(0,0,0,.6);
+  }
+  @keyframes banner{
+    0%{ opacity:0; transform:scale(.6); }
+    14%{ opacity:1; transform:scale(1.06); }
+    24%{ transform:scale(1); }
+    78%{ opacity:1; transform:scale(1); }
+    100%{ opacity:0; transform:scale(1.02); }
+  }
+  @keyframes neonPulse{
+    0%,100%{ text-shadow:0 0 6px #fff, 0 0 20px var(--gold-bright), 0 0 44px var(--gold), 0 0 80px var(--gold); }
+    50%{ text-shadow:0 0 10px #fff, 0 0 34px var(--gold-bright), 0 0 70px var(--gold), 0 0 120px var(--gold); }
+  }
+  @keyframes neonPulseRed{
+    0%,100%{ text-shadow:0 0 6px #fff, 0 0 20px #ff6b62, 0 0 44px var(--loss), 0 0 80px var(--loss); }
+    50%{ text-shadow:0 0 10px #fff, 0 0 34px #ff6b62, 0 0 70px var(--loss), 0 0 120px var(--loss); }
+  }
+
   @media (prefers-reduced-motion: reduce){
     .die.rolling{ animation:none; }
+    .table-felt.celebrate::before,
+    .table-felt.nearmiss::before{ animation:none; }
+    .table-felt.nearmiss{ animation:none; }
+    .celebration.show{ animation:bannerStatic 1.2s ease forwards; }
+    .celebration.win .banner-text,
+    .celebration.lose .banner-text{ animation:none; }
+  }
+  @keyframes bannerStatic{
+    0%{ opacity:0; }
+    12%{ opacity:1; }
+    80%{ opacity:1; }
+    100%{ opacity:0; }
   }
 </style>
 </head>
 <body>
+<canvas id="confetti" aria-hidden="true"></canvas>
+<div class="celebration" id="celebration" aria-hidden="true">
+  <p class="banner-text" id="celebrationText"></p>
+</div>
 <div id="app">
 
   <!-- ============ CASINO MODE ============ -->
@@ -659,6 +771,108 @@
 <script>
 (function(){
   "use strict";
+
+  // ---------- win / lose celebration ----------
+  var reduceMotion = window.matchMedia &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var confettiCanvas = document.getElementById('confetti');
+  var confettiCtx = confettiCanvas.getContext('2d');
+  var celebrationEl = document.getElementById('celebration');
+  var celebrationText = document.getElementById('celebrationText');
+  var particles = [];
+  var confettiRunning = false;
+
+  var WIN_COLORS = ['#f5d67c', '#e8b94a', '#7fbf8f', '#f3eedd', '#ffffff'];
+  var LOSE_COLORS = ['#ff6b62', '#c1443d', '#e8b94a', '#f3eedd'];
+
+  function sizeConfetti(){
+    confettiCanvas.width = window.innerWidth;
+    confettiCanvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', sizeConfetti);
+  sizeConfetti();
+
+  function spawnConfetti(colors, count){
+    var cx = window.innerWidth / 2;
+    var cy = window.innerHeight * 0.42;
+    for (var i = 0; i < count; i++){
+      var angle = Math.random() * Math.PI * 2;
+      var speed = 6 + Math.random() * 11;
+      particles.push({
+        x: cx + (Math.random() - 0.5) * 80,
+        y: cy + (Math.random() - 0.5) * 40,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 4,
+        g: 0.28 + Math.random() * 0.12,
+        w: 6 + Math.random() * 7,
+        h: 9 + Math.random() * 9,
+        rot: Math.random() * Math.PI,
+        vr: (Math.random() - 0.5) * 0.4,
+        color: colors[(Math.random() * colors.length) | 0],
+        life: 90 + Math.random() * 50
+      });
+    }
+    if (!confettiRunning){ confettiRunning = true; requestAnimationFrame(tickConfetti); }
+  }
+
+  function tickConfetti(){
+    confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+    for (var i = particles.length - 1; i >= 0; i--){
+      var p = particles[i];
+      p.vy += p.g;
+      p.vx *= 0.99;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rot += p.vr;
+      p.life--;
+      if (p.life <= 0 || p.y > confettiCanvas.height + 40){
+        particles.splice(i, 1);
+        continue;
+      }
+      confettiCtx.save();
+      confettiCtx.translate(p.x, p.y);
+      confettiCtx.rotate(p.rot);
+      confettiCtx.globalAlpha = Math.min(1, p.life / 30);
+      confettiCtx.fillStyle = p.color;
+      confettiCtx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      confettiCtx.restore();
+    }
+    if (particles.length > 0){
+      requestAnimationFrame(tickConfetti);
+    } else {
+      confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+      confettiRunning = false;
+    }
+  }
+
+  var bannerTimer = null;
+  function flashBanner(isWin){
+    celebrationText.innerHTML = (isWin ? 'Winner!' : 'So close!') +
+      '<span class="banner-sub">' + (isWin ? 'Feeling lucky? Keep the streak going' : 'You almost had it — one more roll') + '</span>';
+    celebrationEl.className = 'celebration ' + (isWin ? 'win' : 'lose');
+    // force reflow so the animation restarts on rapid rounds
+    void celebrationEl.offsetWidth;
+    celebrationEl.classList.add('show');
+    clearTimeout(bannerTimer);
+    bannerTimer = setTimeout(function(){
+      celebrationEl.className = 'celebration';
+    }, reduceMotion ? 1200 : 1600);
+  }
+
+  function celebrate(isWin, tableEl){
+    flashBanner(isWin);
+    if (tableEl){
+      var cls = isWin ? 'celebrate' : 'nearmiss';
+      tableEl.classList.remove('celebrate', 'nearmiss');
+      void tableEl.offsetWidth;
+      tableEl.classList.add(cls);
+      setTimeout(function(){ tableEl.classList.remove(cls); }, 1400);
+    }
+    if (!reduceMotion){
+      spawnConfetti(isWin ? WIN_COLORS : LOSE_COLORS, isWin ? 150 : 70);
+    }
+  }
 
   // ---------- pip layout ----------
   var PIP_MAP = {
@@ -901,6 +1115,7 @@
 
     resultLine.textContent = d1 + ' + ' + d2 + ' = ' + sum + ' (' + parity.toUpperCase() + ') — you ' + (win ? 'won' : 'lost') + ' ' + formatPeso(bet);
     resultLine.classList.add(win ? 'win' : 'lose');
+    celebrate(win, document.querySelector('.table-felt'));
 
     balanceValue.textContent = formatPeso(state.balance);
     roundValue.textContent = state.round;
