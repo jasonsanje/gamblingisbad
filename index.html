@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lucky Parity — A Rigged Game, On Purpose</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* casino mode */
+    --felt-dark:#0a2419;
+    --felt:#123b2a;
+    --felt-light:#1d5238;
+    --gold:#e8b94a;
+    --gold-bright:#f5d67c;
+    --ivory:#f3eedd;
+    --ivory-dim:#cfc7ab;
+    --loss:#c1443d;
+    --win:#7fbf8f;
+    /* truth mode */
+    --ink-bg:#12151b;
+    --ink-bg-2:#181c24;
+    --paper:#ece7d8;
+    --paper-dim:#d9d3bf;
+    --stamp:#b23a2e;
+    --mono-text:#e8e4d6;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--felt-dark);
+    font-family:'Inter',system-ui,sans-serif;
+    color:var(--ivory);
+    min-height:100vh;
+    transition:background .6s ease;
+  }
+  body.truth-active{ background:var(--ink-bg); }
+  .hidden{ display:none !important; }
+  button{ font-family:inherit; cursor:pointer; }
+  button:disabled{ cursor:not-allowed; opacity:.45; }
+
+  .stage{
+    max-width:640px;
+    margin:0 auto;
+    padding:32px 20px 60px;
+  }
+
+  /* ---------- CASINO MODE ---------- */
+  .marquee{ text-align:center; margin-bottom:22px; }
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    letter-spacing:.14em;
+    color:var(--gold);
+    opacity:.85;
+    margin:0 0 10px;
+  }
+  .marquee h1{
+    font-family:'Fraunces',serif;
+    font-optical-sizing:auto;
+    font-weight:700;
+    font-size:clamp(40px,9vw,64px);
+    letter-spacing:.01em;
+    margin:0;
+    color:var(--gold-bright);
+    text-shadow:0 0 24px rgba(232,185,74,.35);
+  }
+  .tagline{
+    font-family:'Fraunces',serif;
+    font-style:italic;
+    font-weight:500;
+    color:var(--ivory-dim);
+    margin:8px 0 0;
+    font-size:16px;
+  }
+
+  .hud{ display:flex; gap:12px; justify-content:center; margin-bottom:24px; }
+  .pill{
+    background:var(--felt-light);
+    border:1px solid rgba(232,185,74,.35);
+    border-radius:999px;
+    padding:8px 18px;
+    display:flex;
+    align-items:baseline;
+    gap:6px;
+  }
+  .pill-label{ font-size:11px; letter-spacing:.08em; color:var(--ivory-dim); text-transform:uppercase; }
+  .pill-value{ font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:16px; color:var(--gold-bright); }
+  .pill-unit{ font-size:11px; color:var(--ivory-dim); }
+
+  .table-felt{
+    background:radial-gradient(circle at 50% 0%, var(--felt-light), var(--felt) 70%);
+    border:1px solid rgba(232,185,74,.25);
+    border-radius:20px;
+    padding:28px 22px 26px;
+    box-shadow:inset 0 0 60px rgba(0,0,0,.35), 0 18px 40px rgba(0,0,0,.4);
+  }
+
+  .dice-row{ display:flex; justify-content:center; gap:18px; margin-bottom:16px; }
+  .die{
+    width:64px; height:64px;
+    background:var(--ivory);
+    border-radius:12px;
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    grid-template-rows:repeat(3,1fr);
+    padding:10px;
+    box-shadow:0 6px 14px rgba(0,0,0,.4);
+    transition:transform .15s ease;
+  }
+  .die.rolling{ animation:rollspin .55s ease-in-out; }
+  @keyframes rollspin{
+    0%{ transform:rotate(0deg) scale(1); }
+    30%{ transform:rotate(120deg) scale(1.08); }
+    60%{ transform:rotate(240deg) scale(.96); }
+    100%{ transform:rotate(360deg) scale(1); }
+  }
+  .pip{
+    width:10px; height:10px;
+    border-radius:50%;
+    background:var(--felt-dark);
+    justify-self:center;
+    align-self:center;
+    opacity:0;
+  }
+  .pip.lit{ opacity:1; }
+
+  .result-line{
+    text-align:center;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:14px;
+    color:var(--ivory-dim);
+    min-height:20px;
+    margin:0 0 20px;
+  }
+  .result-line.win{ color:var(--win); }
+  .result-line.lose{ color:var(--loss); }
+
+  .bet-row{ display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
+  .bet-label{ font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--ivory-dim); margin-right:2px; }
+  .chip-select{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+  .chip{
+    padding:10px 14px;
+    border-radius:999px;
+    border:2px dashed rgba(232,185,74,.5);
+    background:var(--felt-dark);
+    color:var(--gold-bright);
+    font-family:'IBM Plex Mono',monospace;
+    font-weight:600;
+    font-size:12px;
+    white-space:nowrap;
+  }
+  .chip.active{ border-style:solid; background:var(--gold); color:var(--felt-dark); }
+  .custom-bet-input{
+    width:128px;
+    padding:9px 12px;
+    border-radius:999px;
+    border:2px dashed rgba(232,185,74,.5);
+    background:var(--felt-dark);
+    color:var(--gold-bright);
+    font-family:'IBM Plex Mono',monospace;
+    font-weight:600;
+    font-size:12px;
+    text-align:center;
+  }
+  .custom-bet-input::placeholder{ color:var(--ivory-dim); opacity:.7; }
+  .custom-bet-input:focus{ outline:none; border-style:solid; }
+  .custom-bet-input.active{ border-style:solid; background:var(--gold); color:var(--felt-dark); }
+  .bet-warning{
+    text-align:center;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    color:var(--loss);
+    margin:0 0 14px;
+    min-height:14px;
+  }
+  .bet-note{
+    text-align:center;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    color:var(--ivory-dim);
+    margin:0 0 14px;
+    min-height:14px;
+    transition:color .3s ease;
+  }
+  .bet-note.flash{ color:var(--gold-bright); font-weight:600; }
+  .chip:disabled{
+    opacity:.35;
+    border-style:dotted;
+    cursor:not-allowed;
+  }
+  .chip:disabled.active{ background:var(--felt-dark); color:var(--gold-bright); }
+
+  /* ---------- hidden operator controls ---------- */
+  #operatorDot{
+    position:fixed;
+    bottom:8px;
+    right:8px;
+    width:16px;
+    height:16px;
+    padding:0;
+    border:none;
+    border-radius:50%;
+    background:rgba(255,255,255,.06);
+    z-index:1000;
+  }
+  #operatorDot:hover{ background:rgba(255,255,255,.14); }
+  .operator-panel{
+    position:fixed;
+    bottom:32px;
+    right:8px;
+    z-index:1000;
+    background:#0d0f13;
+    border:1px solid rgba(232,185,74,.4);
+    border-radius:10px;
+    padding:14px;
+    width:200px;
+    box-shadow:0 12px 30px rgba(0,0,0,.5);
+  }
+  .operator-title{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--gold-bright);
+    margin:0 0 8px;
+  }
+  .operator-status{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    color:var(--ivory-dim);
+    margin:0 0 10px;
+  }
+  .operator-btn{
+    display:block;
+    width:100%;
+    padding:9px 0;
+    margin-bottom:8px;
+    border-radius:8px;
+    border:1px solid rgba(232,185,74,.4);
+    background:transparent;
+    color:var(--ivory);
+    font-size:11.5px;
+    font-weight:600;
+  }
+  .operator-btn:last-child{ margin-bottom:0; }
+  .operator-btn.rig:hover{ background:var(--stamp); border-color:var(--stamp); color:#fff; }
+  .operator-btn.wipe:hover{ background:var(--gold); border-color:var(--gold); color:var(--felt-dark); }
+
+  .guess-row{ display:flex; justify-content:center; gap:12px; margin-bottom:18px; }
+  .guess-btn{
+    flex:1; max-width:150px;
+    padding:14px 0;
+    border-radius:10px;
+    border:1px solid rgba(232,185,74,.4);
+    background:transparent;
+    color:var(--ivory);
+    font-weight:600;
+    letter-spacing:.06em;
+    font-size:14px;
+  }
+  .guess-btn.active{ background:var(--gold); color:var(--felt-dark); border-color:var(--gold); }
+
+  .roll-btn{
+    display:block;
+    width:100%;
+    padding:16px 0;
+    border:none;
+    border-radius:12px;
+    background:linear-gradient(180deg, var(--gold-bright), var(--gold));
+    color:var(--felt-dark);
+    font-weight:700;
+    font-size:15px;
+    letter-spacing:.08em;
+    box-shadow:0 8px 18px rgba(232,185,74,.25);
+  }
+  .roll-btn:not(:disabled):hover{ filter:brightness(1.05); }
+
+  .sparkline-wrap{ margin-top:26px; text-align:center; }
+  .sparkline-label{ font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ivory-dim); }
+  #sparkline{ width:100%; height:100px; margin-top:8px; }
+
+  .instructor-toggle{
+    display:flex; align-items:center; gap:8px;
+    justify-content:center;
+    margin-top:22px;
+    font-size:12px;
+    color:var(--ivory-dim);
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .instructor-panel{
+    margin-top:12px;
+    background:rgba(0,0,0,.25);
+    border:1px dashed rgba(232,185,74,.4);
+    border-radius:10px;
+    padding:12px 14px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    color:var(--gold-bright);
+    text-align:center;
+  }
+
+  .expose-btn{
+    display:block;
+    margin:26px auto 0;
+    background:none;
+    border:none;
+    color:var(--ivory-dim);
+    font-size:12px;
+    text-decoration:underline;
+    letter-spacing:.02em;
+  }
+  .expose-btn:hover{ color:var(--gold-bright); }
+
+  /* ---------- TRUTH MODE ---------- */
+  .truth-stage{ max-width:720px; color:var(--mono-text); }
+  .truth-header{ text-align:center; position:relative; margin-bottom:28px; }
+  .stamp{
+    display:inline-block;
+    border:3px solid var(--stamp);
+    color:var(--stamp);
+    font-family:'IBM Plex Mono',monospace;
+    font-weight:700;
+    font-size:13px;
+    letter-spacing:.2em;
+    padding:5px 14px;
+    transform:rotate(-4deg);
+    border-radius:4px;
+    margin-bottom:14px;
+  }
+  .truth-header h2{
+    font-family:'Fraunces',serif;
+    font-weight:700;
+    font-size:clamp(28px,6vw,40px);
+    color:var(--paper);
+    margin:0 0 10px;
+  }
+  .truth-header p{
+    font-size:14px;
+    color:var(--paper-dim);
+    max-width:520px;
+    margin:0 auto;
+    line-height:1.5;
+  }
+
+  .receipt{
+    background:var(--paper);
+    color:#1c1a14;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    border-radius:2px;
+    padding:20px 18px 26px;
+    margin:26px 0;
+    box-shadow:0 20px 40px rgba(0,0,0,.4);
+    position:relative;
+  }
+  .receipt::after{
+    content:"";
+    position:absolute;
+    left:0; right:0; bottom:-1px; height:14px;
+    background:
+      linear-gradient(-45deg, var(--ink-bg) 6px, transparent 0),
+      linear-gradient(45deg, var(--ink-bg) 6px, transparent 0);
+    background-size:14px 14px;
+    background-repeat:repeat-x;
+  }
+  .receipt h3{ font-size:12px; letter-spacing:.1em; text-align:center; margin:0 0 12px; text-transform:uppercase; }
+  .receipt table{ width:100%; border-collapse:collapse; font-size:11px; }
+  .receipt th, .receipt td{ padding:3px 4px; text-align:center; border-bottom:1px dotted rgba(0,0,0,.25); }
+  .receipt th{ font-weight:700; border-bottom:1px solid rgba(0,0,0,.5); }
+  .receipt td.win{ color:#1c6b3a; font-weight:600; }
+  .receipt td.lose{ color:var(--stamp); font-weight:600; }
+  .receipt-scroll{ max-height:220px; overflow-y:auto; }
+
+  .prob-chart-wrap{ margin:26px 0; }
+  .prob-chart-wrap h3{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--paper-dim); margin:0 0 8px; text-align:center;
+  }
+  #probChart{ width:100%; height:140px; }
+
+  .explain-grid{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+    gap:14px; margin:26px 0;
+  }
+  .explain-card{
+    background:var(--ink-bg-2);
+    border:1px solid rgba(255,255,255,.08);
+    border-left:3px solid var(--gold);
+    border-radius:8px;
+    padding:16px;
+  }
+  .explain-card h4{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px; letter-spacing:.08em;
+    color:var(--gold-bright); margin:0 0 8px;
+  }
+  .explain-card p{ font-size:13px; line-height:1.55; color:var(--paper-dim); margin:0; }
+
+  .help-panel{
+    background:var(--ink-bg-2);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:10px;
+    padding:20px;
+    margin:26px 0;
+  }
+  .help-panel h3{ font-size:15px; margin:0 0 8px; color:var(--paper); font-family:'Fraunces',serif; }
+  .help-panel p{ font-size:13px; line-height:1.6; color:var(--paper-dim); margin:0 0 10px; }
+  .help-panel .hotline{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:18px;
+    color:var(--gold-bright);
+    font-weight:600;
+  }
+  .help-panel .disclaimer{
+    font-size:11.5px;
+    color:var(--paper-dim);
+    opacity:.75;
+    border-top:1px solid rgba(255,255,255,.08);
+    padding-top:10px;
+    margin-top:14px;
+  }
+
+  .reset-btn{
+    display:block; margin:30px auto 0;
+    padding:14px 26px;
+    border-radius:10px;
+    border:1px solid var(--gold);
+    background:transparent;
+    color:var(--gold-bright);
+    font-weight:600;
+    font-size:13px;
+    letter-spacing:.05em;
+  }
+  .reset-btn:hover{ background:var(--gold); color:var(--ink-bg); }
+
+  @media (prefers-reduced-motion: reduce){
+    .die.rolling{ animation:none; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ============ CASINO MODE ============ -->
+  <section class="stage casino-stage" id="casinoStage">
+    <div class="marquee">
+      <p class="eyebrow">A CLASSROOM DEMONSTRATION · NO REAL MONEY IS USED</p>
+      <h1>LUCKY PARITY</h1>
+      <p class="tagline">Two dice. Guess odd or even. Simple, right?</p>
+    </div>
+
+    <div class="hud">
+      <div class="pill balance-pill">
+        <span class="pill-label">Balance</span>
+        <span class="pill-value" id="balanceValue">₱100,000</span>
+      </div>
+      <div class="pill round-pill">
+        <span class="pill-label">Round</span>
+        <span class="pill-value" id="roundValue">0</span>
+      </div>
+    </div>
+
+    <div class="table-felt">
+      <div class="dice-row">
+        <div class="die" id="die1">
+          <span class="pip" data-pos="1"></span><span class="pip" data-pos="2"></span><span class="pip" data-pos="3"></span>
+          <span class="pip" data-pos="4"></span><span class="pip" data-pos="5"></span><span class="pip" data-pos="6"></span>
+          <span class="pip" data-pos="7"></span><span class="pip" data-pos="8"></span><span class="pip" data-pos="9"></span>
+        </div>
+        <div class="die" id="die2">
+          <span class="pip" data-pos="1"></span><span class="pip" data-pos="2"></span><span class="pip" data-pos="3"></span>
+          <span class="pip" data-pos="4"></span><span class="pip" data-pos="5"></span><span class="pip" data-pos="6"></span>
+          <span class="pip" data-pos="7"></span><span class="pip" data-pos="8"></span><span class="pip" data-pos="9"></span>
+        </div>
+      </div>
+      <p class="result-line" id="resultLine">Pick a bet size and a guess to begin.</p>
+
+      <div class="bet-row">
+        <span class="bet-label">Bet</span>
+        <div class="chip-select" id="chipSelect">
+          <button class="chip" data-amt="1000">₱1,000</button>
+          <button class="chip" data-amt="10000">₱10,000</button>
+          <button class="chip" data-amt="100000">₱100,000</button>
+        </div>
+        <input type="number" class="custom-bet-input" id="customBet" placeholder="Custom ₱ amount" min="1" step="1" inputmode="numeric">
+      </div>
+      <p class="bet-note" id="betNote"></p>
+      <p class="bet-warning" id="betWarning"></p>
+
+      <div class="guess-row">
+        <button class="guess-btn" id="guessOdd" data-guess="odd">ODD</button>
+        <button class="guess-btn" id="guessEven" data-guess="even">EVEN</button>
+      </div>
+
+      <button class="roll-btn" id="rollBtn" disabled>ROLL THE DICE</button>
+    </div>
+
+    <div class="sparkline-wrap">
+      <span class="sparkline-label">Your balance over time</span>
+      <canvas id="sparkline" width="600" height="100"></canvas>
+    </div>
+
+    <label class="instructor-toggle">
+      <input type="checkbox" id="instructorToggle">
+      <span>Instructor mode — show the true odds live, each round</span>
+    </label>
+    <div id="instructorPanel" class="instructor-panel hidden"></div>
+
+    <button class="expose-btn" id="exposeBtn">I want to stop — show me how this actually worked</button>
+  </section>
+
+  <!-- ============ TRUTH MODE ============ -->
+  <section class="stage truth-stage hidden" id="truthStage">
+    <div class="truth-header">
+      <span class="stamp">RIGGED</span>
+      <h2>How This Game Was Rigged</h2>
+      <p>Every roll above looked random. It wasn't. The dice were quietly steered so you'd win early, trust the game, and lose slowly once you were invested. Here's exactly how, round by round.</p>
+    </div>
+
+    <div class="receipt">
+      <h3>* * * Session Ledger * * *</h3>
+      <div class="receipt-scroll">
+        <table id="ledgerTable">
+          <thead>
+            <tr><th>#</th><th>Guess</th><th>Roll</th><th>Result</th><th>Bet</th><th>True odds</th></tr>
+          </thead>
+          <tbody id="ledgerBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="prob-chart-wrap">
+      <h3>Your true win probability, round by round</h3>
+      <canvas id="probChart" width="680" height="140"></canvas>
+    </div>
+
+    <div class="explain-grid">
+      <div class="explain-card">
+        <h4>01 — THE HOOK</h4>
+        <p>For the first several rounds, your odds of winning were secretly set to around 80%, no matter what you guessed. That's not luck — that's a game built to earn your trust fast.</p>
+      </div>
+      <div class="explain-card">
+        <h4>02 — THE GRIND</h4>
+        <p>Once you were a few rounds in, the true odds quietly dropped — sometimes below 20% — while the dice still looked perfectly fair. This is what a hidden house edge feels like from the inside.</p>
+      </div>
+      <div class="explain-card">
+        <h4>03 — WHY IT WORKS</h4>
+        <p>Early wins build false confidence. Near-misses and streaks trigger the same reward chemistry as real wins. And once you've lost some money, it feels natural to think "I'm due" — that's the sunk-cost trap, and it's designed on purpose.</p>
+      </div>
+    </div>
+
+    <div class="help-panel">
+      <h3>If this feels familiar</h3>
+      <p>Licensed, regulated games are required to publish a fixed payout rate that never secretly changes mid-session. Many unregulated online gambling sites and apps do exactly what this demo just did to you — quietly move the odds while keeping the game looking fair.</p>
+      <p>If gambling — real or online — is starting to feel hard to stop, it helps to talk to someone. In the Philippines, PAGCOR's National Problem Gambling Helpline offers free, confidential counseling 24/7, for players and for worried family members too:</p>
+      <p class="hotline">(02) 8248-9568</p>
+      <p class="disclaimer">This page is a teaching tool. No real money, accounts, or payments were ever involved — every peso here was fake, and the rigging was deliberate, built to show how manipulative gambling design works from the inside.</p>
+    </div>
+
+    <button class="reset-btn" id="resetBtn">Reset and play again</button>
+  </section>
+
+</div>
+
+<!-- ============ HIDDEN OPERATOR CONTROLS (booth staff only) ============ -->
+<button id="operatorDot" aria-label="Operator controls" title=""></button>
+<div id="operatorPanel" class="operator-panel hidden">
+  <p class="operator-title">Booth Controls</p>
+  <p class="operator-status" id="operatorStatus">Phase: hook (limit locked)</p>
+  <button class="operator-btn rig" id="startRiggingBtn">⚡ Start rigging now</button>
+  <button class="operator-btn wipe" id="operatorResetBtn">↺ Reset everything</button>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- pip layout ----------
+  var PIP_MAP = {
+    1:[5],
+    2:[1,9],
+    3:[1,5,9],
+    4:[1,3,7,9],
+    5:[1,3,5,7,9],
+    6:[1,3,4,6,7,9]
+  };
+
+  function setDieFace(dieEl, value){
+    var lit = PIP_MAP[value] || [];
+    var pips = dieEl.querySelectorAll('.pip');
+    pips.forEach(function(p){
+      var pos = parseInt(p.getAttribute('data-pos'), 10);
+      if (lit.indexOf(pos) !== -1) p.classList.add('lit');
+      else p.classList.remove('lit');
+    });
+  }
+
+  // ---------- game config ----------
+  var START_BALANCE = 100000;
+  var HOOK_ROUNDS = 4;
+  var HOOK_PROB = 0.82;
+  var GRIND_START_PROB = 0.30;
+  var DECAY_PER_ROUND = 0.045;
+  var FLOOR_PROB = 0.08;
+  var AUTO_REVEAL_ROUND = 14;
+  var NEW_PLAYER_LIMIT = 1000;
+
+  function formatPeso(n){
+    return '₱' + Math.round(n).toLocaleString('en-PH');
+  }
+
+  // ---------- state ----------
+  var state = {
+    balance: START_BALANCE,
+    round: 0,
+    bet: null,
+    guess: null,
+    history: [],
+    instructorMode: false,
+    over: false,
+    grindStartRound: HOOK_ROUNDS,
+    locked: true
+  };
+
+  function computeProb(roundNum){
+    if (roundNum <= state.grindStartRound) return HOOK_PROB;
+    var into = roundNum - state.grindStartRound;
+    var p = GRIND_START_PROB - into * DECAY_PER_ROUND;
+    return Math.max(p, FLOOR_PROB);
+  }
+
+  function rollForParity(parity){
+    var d1, d2, sum, tries = 0;
+    do {
+      d1 = 1 + Math.floor(Math.random() * 6);
+      d2 = 1 + Math.floor(Math.random() * 6);
+      sum = d1 + d2;
+      tries++;
+    } while ( ((sum % 2 === 0) ? 'even' : 'odd') !== parity && tries < 200 );
+    return [d1, d2];
+  }
+
+  // ---------- DOM refs ----------
+  var balanceValue = document.getElementById('balanceValue');
+  var roundValue = document.getElementById('roundValue');
+  var die1 = document.getElementById('die1');
+  var die2 = document.getElementById('die2');
+  var resultLine = document.getElementById('resultLine');
+  var chipSelect = document.getElementById('chipSelect');
+  var customBet = document.getElementById('customBet');
+  var betWarning = document.getElementById('betWarning');
+  var guessOdd = document.getElementById('guessOdd');
+  var guessEven = document.getElementById('guessEven');
+  var rollBtn = document.getElementById('rollBtn');
+  var sparkline = document.getElementById('sparkline');
+  var instructorToggle = document.getElementById('instructorToggle');
+  var instructorPanel = document.getElementById('instructorPanel');
+  var exposeBtn = document.getElementById('exposeBtn');
+  var casinoStage = document.getElementById('casinoStage');
+  var truthStage = document.getElementById('truthStage');
+  var ledgerBody = document.getElementById('ledgerBody');
+  var probChart = document.getElementById('probChart');
+  var resetBtn = document.getElementById('resetBtn');
+  var betNote = document.getElementById('betNote');
+  var operatorDot = document.getElementById('operatorDot');
+  var operatorPanel = document.getElementById('operatorPanel');
+  var operatorStatus = document.getElementById('operatorStatus');
+  var startRiggingBtn = document.getElementById('startRiggingBtn');
+  var operatorResetBtn = document.getElementById('operatorResetBtn');
+
+  setDieFace(die1, 1);
+  setDieFace(die2, 1);
+
+  // ---------- bet chip selection ----------
+  chipSelect.addEventListener('click', function(e){
+    var btn = e.target.closest('.chip');
+    if (!btn || btn.disabled || state.over) return;
+    var amt = parseInt(btn.getAttribute('data-amt'), 10);
+    state.bet = amt;
+    customBet.value = '';
+    Array.prototype.forEach.call(chipSelect.querySelectorAll('.chip'), function(c){
+      c.classList.toggle('active', c === btn);
+    });
+    refreshRollButton();
+  });
+
+  // ---------- custom bet amount ----------
+  customBet.addEventListener('input', function(){
+    var val = parseInt(customBet.value, 10);
+    Array.prototype.forEach.call(chipSelect.querySelectorAll('.chip'), function(c){ c.classList.remove('active'); });
+    if (!isNaN(val) && val > 0){
+      if (state.locked && val > NEW_PLAYER_LIMIT){
+        val = NEW_PLAYER_LIMIT;
+        customBet.value = val;
+      }
+      state.bet = val;
+    } else {
+      state.bet = null;
+    }
+    refreshRollButton();
+  });
+
+  // ---------- guess selection ----------
+  function selectGuess(g, btn){
+    if (state.over) return;
+    state.guess = g;
+    guessOdd.classList.toggle('active', g === 'odd');
+    guessEven.classList.toggle('active', g === 'even');
+    refreshRollButton();
+  }
+  guessOdd.addEventListener('click', function(){ selectGuess('odd', guessOdd); });
+  guessEven.addEventListener('click', function(){ selectGuess('even', guessEven); });
+
+  function refreshRollButton(){
+    var ready = state.bet && state.guess && !state.over && state.bet <= state.balance;
+    rollBtn.disabled = !ready;
+    if (state.bet && state.bet > state.balance){
+      betWarning.textContent = "You don't have " + formatPeso(state.bet) + " left to bet.";
+    } else {
+      betWarning.textContent = '';
+    }
+  }
+
+  // ---------- new-player bet limit (lifted once the grind phase starts) ----------
+  function refreshBetLocks(){
+    var wasLocked = state.locked;
+    state.locked = state.round < state.grindStartRound;
+
+    Array.prototype.forEach.call(chipSelect.querySelectorAll('.chip'), function(c){
+      var amt = parseInt(c.getAttribute('data-amt'), 10);
+      var shouldDisable = state.locked && amt > NEW_PLAYER_LIMIT;
+      c.disabled = shouldDisable;
+      if (shouldDisable && c.classList.contains('active')){
+        c.classList.remove('active');
+        if (state.bet === amt) state.bet = null;
+      }
+    });
+
+    if (state.locked){
+      customBet.setAttribute('max', NEW_PLAYER_LIMIT);
+      if (state.bet && state.bet > NEW_PLAYER_LIMIT){ state.bet = null; customBet.value = ''; }
+      betNote.textContent = 'New player limit: ' + formatPeso(NEW_PLAYER_LIMIT) + ' max per round';
+      betNote.classList.remove('flash');
+    } else if (wasLocked){
+      customBet.removeAttribute('max');
+      betNote.textContent = '🎉 Limit lifted — bet up to ' + formatPeso(100000) + ' now!';
+      betNote.classList.add('flash');
+      setTimeout(function(){ betNote.classList.remove('flash'); betNote.textContent = ''; }, 3500);
+    } else if (!betNote.classList.contains('flash')){
+      customBet.removeAttribute('max');
+      betNote.textContent = '';
+    }
+
+    refreshRollButton();
+  }
+
+  function updateOperatorStatus(){
+    var nextRound = state.round + 1;
+    var inGrind = nextRound > state.grindStartRound;
+    operatorStatus.textContent = 'Phase: ' + (inGrind ? 'rigged (unlocked)' : 'hook (limit locked)') + ' · round ' + state.round;
+  }
+
+  // ---------- instructor mode ----------
+  instructorToggle.addEventListener('change', function(){
+    state.instructorMode = instructorToggle.checked;
+    instructorPanel.classList.toggle('hidden', !state.instructorMode);
+    updateInstructorPanel();
+  });
+
+  function updateInstructorPanel(){
+    if (!state.instructorMode) return;
+    var nextRound = state.round + 1;
+    var prob = computeProb(nextRound);
+    var phase = nextRound <= state.grindStartRound ? 'HOOK PHASE' : 'GRIND PHASE';
+    instructorPanel.textContent = 'Next roll — phase: ' + phase + ' · true win probability: ' + Math.round(prob * 100) + '%';
+  }
+
+  // ---------- roll ----------
+  rollBtn.addEventListener('click', function(){
+    if (rollBtn.disabled) return;
+    rollBtn.disabled = true;
+
+    die1.classList.add('rolling');
+    die2.classList.add('rolling');
+    resultLine.className = 'result-line';
+    resultLine.textContent = 'Rolling...';
+
+    setTimeout(function(){
+      die1.classList.remove('rolling');
+      die2.classList.remove('rolling');
+      resolveRound();
+    }, 560);
+  });
+
+  function resolveRound(){
+    state.round += 1;
+    var prob = computeProb(state.round);
+    var win = Math.random() < prob;
+    var desiredParity = win ? state.guess : (state.guess === 'odd' ? 'even' : 'odd');
+    var dice = rollForParity(desiredParity);
+    var d1 = dice[0], d2 = dice[1], sum = d1 + d2;
+    var parity = (sum % 2 === 0) ? 'even' : 'odd';
+
+    setDieFace(die1, d1);
+    setDieFace(die2, d2);
+
+    var bet = state.bet;
+    if (win) state.balance += bet;
+    else state.balance -= bet;
+    if (state.balance < 0) state.balance = 0;
+
+    state.history.push({
+      round: state.round, guess: state.guess, d1: d1, d2: d2, sum: sum,
+      parity: parity, win: win, bet: bet, trueProb: prob, balanceAfter: state.balance
+    });
+
+    resultLine.textContent = d1 + ' + ' + d2 + ' = ' + sum + ' (' + parity.toUpperCase() + ') — you ' + (win ? 'won' : 'lost') + ' ' + formatPeso(bet);
+    resultLine.classList.add(win ? 'win' : 'lose');
+
+    balanceValue.textContent = formatPeso(state.balance);
+    roundValue.textContent = state.round;
+
+    drawSparkline();
+    updateInstructorPanel();
+    updateOperatorStatus();
+
+    if (state.balance <= 0){
+      state.over = true;
+      resultLine.textContent += ' — you\'re out of pesos.';
+      setTimeout(revealTruth, 900);
+      return;
+    }
+    if (state.round >= AUTO_REVEAL_ROUND){
+      state.over = true;
+      setTimeout(revealTruth, 900);
+      return;
+    }
+    refreshBetLocks();
+  }
+
+  // ---------- sparkline ----------
+  function drawSparkline(){
+    var ctx = sparkline.getContext('2d');
+    var w = sparkline.width, h = sparkline.height;
+    ctx.clearRect(0, 0, w, h);
+
+    var points = [{balanceAfter: START_BALANCE}].concat(state.history);
+    var values = points.map(function(p){ return p.balanceAfter; });
+    var max = Math.max.apply(null, values.concat([START_BALANCE])) * 1.1;
+    var min = 0;
+
+    function xFor(i){ return (i / Math.max(points.length - 1, 1)) * (w - 20) + 10; }
+    function yFor(v){ return h - 14 - ((v - min) / (max - min || 1)) * (h - 24); }
+
+    // baseline
+    ctx.strokeStyle = 'rgba(232,185,74,0.35)';
+    ctx.setLineDash([4,4]);
+    ctx.beginPath();
+    ctx.moveTo(10, yFor(START_BALANCE));
+    ctx.lineTo(w - 10, yFor(START_BALANCE));
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // line
+    ctx.strokeStyle = '#e8b94a';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    points.forEach(function(p, i){
+      var x = xFor(i), y = yFor(p.balanceAfter);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+
+    // last point dot
+    var lastIdx = points.length - 1;
+    ctx.fillStyle = '#f5d67c';
+    ctx.beginPath();
+    ctx.arc(xFor(lastIdx), yFor(points[lastIdx].balanceAfter), 3.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // ---------- truth reveal ----------
+  function buildLedger(){
+    ledgerBody.innerHTML = '';
+    state.history.forEach(function(h){
+      var tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td>' + h.round + '</td>' +
+        '<td>' + h.guess.toUpperCase() + '</td>' +
+        '<td>' + h.d1 + '+' + h.d2 + '=' + h.sum + '</td>' +
+        '<td class="' + (h.win ? 'win' : 'lose') + '">' + (h.win ? 'WIN' : 'LOSE') + '</td>' +
+        '<td>' + formatPeso(h.bet) + '</td>' +
+        '<td>' + Math.round(h.trueProb * 100) + '%</td>';
+      ledgerBody.appendChild(tr);
+    });
+  }
+
+  function drawProbChart(){
+    var ctx = probChart.getContext('2d');
+    var w = probChart.width, h = probChart.height;
+    ctx.clearRect(0, 0, w, h);
+
+    var data = state.history;
+    if (data.length === 0) return;
+
+    function xFor(i){ return (i / Math.max(data.length - 1, 1)) * (w - 30) + 20; }
+    function yFor(p){ return h - 20 - (p * (h - 34)); }
+
+    // fair-odds reference line at 50%
+    ctx.strokeStyle = 'rgba(236,231,216,0.4)';
+    ctx.setLineDash([5,5]);
+    ctx.beginPath();
+    ctx.moveTo(20, yFor(0.5));
+    ctx.lineTo(w - 10, yFor(0.5));
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(236,231,216,0.6)';
+    ctx.font = '10px IBM Plex Mono, monospace';
+    ctx.fillText('fair coin-flip odds (50%)', 22, yFor(0.5) - 6);
+
+    // true probability line
+    ctx.strokeStyle = '#b23a2e';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    data.forEach(function(pt, i){
+      var x = xFor(i), y = yFor(pt.trueProb);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+
+    ctx.fillStyle = '#e07a6f';
+    data.forEach(function(pt, i){
+      var x = xFor(i), y = yFor(pt.trueProb);
+      ctx.beginPath();
+      ctx.arc(x, y, 2.4, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  }
+
+  function revealTruth(){
+    buildLedger();
+    casinoStage.classList.add('hidden');
+    truthStage.classList.remove('hidden');
+    document.body.classList.add('truth-active');
+    // draw after layout so canvas has real width
+    requestAnimationFrame(function(){
+      drawProbChart();
+    });
+    window.scrollTo({top: 0, behavior: 'smooth'});
+  }
+
+  exposeBtn.addEventListener('click', revealTruth);
+
+  // ---------- reset ----------
+  function resetGame(){
+    state = {
+      balance: START_BALANCE, round: 0, bet: null, guess: null,
+      history: [], instructorMode: instructorToggle.checked, over: false,
+      grindStartRound: HOOK_ROUNDS, locked: true
+    };
+    balanceValue.textContent = formatPeso(state.balance);
+    roundValue.textContent = state.round;
+    resultLine.textContent = 'Pick a bet size and a guess to begin.';
+    resultLine.className = 'result-line';
+    setDieFace(die1, 1);
+    setDieFace(die2, 1);
+    Array.prototype.forEach.call(chipSelect.querySelectorAll('.chip'), function(c){ c.classList.remove('active'); });
+    customBet.value = '';
+    betWarning.textContent = '';
+    guessOdd.classList.remove('active');
+    guessEven.classList.remove('active');
+    rollBtn.disabled = true;
+    document.body.classList.remove('truth-active');
+    truthStage.classList.add('hidden');
+    casinoStage.classList.remove('hidden');
+    refreshBetLocks();
+    drawSparkline();
+    updateInstructorPanel();
+    updateOperatorStatus();
+    window.scrollTo({top: 0, behavior: 'smooth'});
+  }
+  resetBtn.addEventListener('click', resetGame);
+
+  // ---------- hidden operator controls (booth staff only) ----------
+  operatorDot.addEventListener('click', function(){
+    operatorPanel.classList.toggle('hidden');
+  });
+
+  function startRiggingNow(){
+    if (state.over) return;
+    state.grindStartRound = state.round;
+    refreshBetLocks();
+    updateInstructorPanel();
+    updateOperatorStatus();
+    var original = startRiggingBtn.textContent;
+    startRiggingBtn.textContent = '✓ Rigging started';
+    setTimeout(function(){ startRiggingBtn.textContent = original; }, 1500);
+  }
+  startRiggingBtn.addEventListener('click', startRiggingNow);
+  operatorResetBtn.addEventListener('click', resetGame);
+
+  // initial paint
+  balanceValue.textContent = formatPeso(state.balance);
+  refreshBetLocks();
+  updateOperatorStatus();
+  drawSparkline();
+})();
+</script>
+</body>
+</html>
