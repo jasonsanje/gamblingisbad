@@ -282,8 +282,31 @@
   .sparkline-label{ font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ivory-dim); }
   #sparkline{ width:100%; height:100px; margin-top:8px; }
 
+  /* ---------- two-column casino layout ---------- */
+  .casino-stage{ max-width:1020px; }
+  .casino-columns{
+    display:flex;
+    align-items:flex-start;
+    gap:24px;
+  }
+  .casino-main{
+    flex:1 1 auto;
+    min-width:0;
+    max-width:640px;
+    margin:0 auto;
+  }
+
   /* ---------- in-game scoreboard ---------- */
-  .scoreboard-wrap{ margin-top:26px; }
+  .scoreboard-wrap{
+    flex:0 0 300px;
+    position:sticky;
+    top:20px;
+  }
+  @media (max-width:840px){
+    .casino-columns{ flex-direction:column; }
+    .casino-main{ max-width:none; }
+    .scoreboard-wrap{ flex:1 1 auto; position:static; margin-top:26px; }
+  }
   .scoreboard-label{
     font-size:11px; letter-spacing:.08em; text-transform:uppercase;
     color:var(--ivory-dim); text-align:center; margin:0 0 10px;
@@ -502,7 +525,9 @@
       </div>
     </div>
 
-    <div class="table-felt">
+    <div class="casino-columns">
+     <div class="casino-main">
+      <div class="table-felt">
       <div class="dice-row">
         <div class="die" id="die1">
           <span class="pip" data-pos="1"></span><span class="pip" data-pos="2"></span><span class="pip" data-pos="3"></span>
@@ -537,7 +562,21 @@
       <button class="roll-btn" id="rollBtn" disabled>ROLL THE DICE</button>
     </div>
 
-    <div class="scoreboard-wrap">
+    <div class="sparkline-wrap">
+      <span class="sparkline-label">Your balance over time</span>
+      <canvas id="sparkline" width="600" height="100"></canvas>
+    </div>
+
+    <label class="instructor-toggle">
+      <input type="checkbox" id="instructorToggle">
+      <span>Instructor mode — show the true odds live, each round</span>
+    </label>
+    <div id="instructorPanel" class="instructor-panel hidden"></div>
+
+    <button class="expose-btn" id="exposeBtn">I want to stop — show me how this actually worked</button>
+     </div><!-- /.casino-main -->
+
+     <aside class="scoreboard-wrap">
       <p class="scoreboard-label">Scoreboard — your previous rounds</p>
       <div class="scoreboard">
         <div class="scoreboard-scroll">
@@ -551,20 +590,8 @@
           </table>
         </div>
       </div>
-    </div>
-
-    <div class="sparkline-wrap">
-      <span class="sparkline-label">Your balance over time</span>
-      <canvas id="sparkline" width="600" height="100"></canvas>
-    </div>
-
-    <label class="instructor-toggle">
-      <input type="checkbox" id="instructorToggle">
-      <span>Instructor mode — show the true odds live, each round</span>
-    </label>
-    <div id="instructorPanel" class="instructor-panel hidden"></div>
-
-    <button class="expose-btn" id="exposeBtn">I want to stop — show me how this actually worked</button>
+     </aside>
+    </div><!-- /.casino-columns -->
   </section>
 
   <!-- ============ TRUTH MODE ============ -->
