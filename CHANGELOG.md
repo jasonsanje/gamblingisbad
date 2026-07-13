@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Celebratory win/lose feedback on each roll: a full-screen neon banner
+  ("WINNER!" / "SO CLOSE!"), a confetti burst, chasing marquee bulbs framing the
+  table, and a glow/shake on the felt. The manufactured euphoria and near-miss
+  adrenaline reinforce the demo's lesson before the truth screen is revealed.
+  Honors `prefers-reduced-motion` (banner still shows, confetti/shake suppressed).
 - In-game scoreboard on the casino stage showing every completed round
   (#, Guess, Roll, Result, Bet). The true-odds column is intentionally omitted
   so the rigging stays hidden until the truth screen is revealed.
