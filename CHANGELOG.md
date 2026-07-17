@@ -8,6 +8,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Discreet operator controls for booth use, so the instructor never has to open the
+  visible lower-right panel mid-demo (which onlookers could notice):
+  - **One-shot force-win** — arms the *next* roll as a guaranteed win, then clears itself
+    automatically so the rigged odds resume. Triggered by pressing `w`, tapping the
+    invisible top-left corner, or the new "⚡ Force next win" button in the booth panel.
+    The forced outcome is tagged on the round history but kept out of the player-facing
+    scoreboard, so it stays hidden during play and only the operator's Instructor-mode
+    readout announces `⚡ NEXT ROLL: FORCED WIN`.
+  - **Silent rig start** — starts the grind phase without opening the panel, via pressing
+    `g` or tapping the invisible bottom-left corner (a hidden mirror of the visible dot).
+  - Both triggers give only a faint 1-second glow on the hidden dot as confirmation —
+    meaningless to onlookers. Keyboard shortcuts are ignored while a text field is focused
+    or the game is over, so they never fire by accident.
+
+### Changed
+- Renamed the game from "Lucky Parity" to **"Odd-Even"** across the page title, neon
+  marquee sign, start-of-game modal, and README. The gambling-awareness framing is
+  unchanged.
+
 - "Pity" comeback rigging: each consecutive loss nudges the next roll's win
   probability up by 4% (stacking, capped at +20%), and any win snaps the odds
   straight back to the brutal grind rate. Total win probability is clamped at

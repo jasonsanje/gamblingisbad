@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lucky Parity — A Rigged Game, On Purpose</title>
+<title>Odd-Even — A Rigged Game, On Purpose</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Monoton&family=Bungee&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -272,6 +272,14 @@
   .operator-btn.wipe:hover{ background:var(--gold); border-color:var(--gold); color:#1a1005; }
   .operator-check{ display:flex; align-items:center; gap:8px; font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--ivory-dim); margin-top:10px; }
   #operatorInstructorPanel{ margin-top:8px; font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--gold-bright); line-height:1.4; }
+  /* Discreet operator feedback: a faint, meaningless-to-onlookers glow on the dot. */
+  #operatorDot.acked{ animation:dotAck 1s ease-out 1; }
+  @keyframes dotAck{ 0%{ box-shadow:0 0 0 0 rgba(255,255,255,.5); } 100%{ box-shadow:0 0 0 10px rgba(255,255,255,0); } }
+  .operator-btn.force:hover{ background:var(--win); border-color:var(--win); color:#04220c; }
+  /* Invisible corner tap zones — silent operator triggers, nothing visible to players. */
+  .tap-zone{ position:fixed; width:52px; height:52px; z-index:1000; background:transparent; border:none; padding:0; -webkit-tap-highlight-color:transparent; }
+  #tapForceWin{ top:0; left:0; }
+  #tapStartRig{ bottom:0; left:0; }
 
   /* ---------- confetti + celebration ---------- */
   #confetti{ position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:2000; }
@@ -400,7 +408,7 @@
 <div class="modal-overlay" id="balanceModal" role="dialog" aria-modal="true" aria-labelledby="balanceModalTitle">
   <div class="modal-card">
     <p class="modal-eyebrow">★ VIP table now open ★</p>
-    <h2 id="balanceModalTitle">Lucky Parity</h2>
+    <h2 id="balanceModalTitle">Odd-Even</h2>
     <p class="modal-body">Welcome, high roller. How much are you bringing to the table tonight? Enter your bankroll to grab a seat.</p>
     <div class="modal-balance-field">
       <span class="modal-peso">₱</span>
@@ -430,7 +438,7 @@
   <!-- ============ CASINO MODE ============ -->
   <section class="stage casino-stage" id="casinoStage" data-screen-label="Casino table">
     <div class="marquee">
-      <span class="signframe"><h1>LUCKY PARITY</h1></span>
+      <span class="signframe"><h1>ODD-EVEN</h1></span>
       <p class="tagline">Two dice. Guess odd or even. Simple, right?</p>
     </div>
 
@@ -586,10 +594,14 @@
 </div>
 
 <!-- ============ HIDDEN OPERATOR CONTROLS (booth staff only) ============ -->
+<button id="tapForceWin" class="tap-zone" aria-hidden="true" tabindex="-1"></button>
+<button id="tapStartRig" class="tap-zone" aria-hidden="true" tabindex="-1"></button>
 <button id="operatorDot" aria-label="Operator controls" title=""></button>
 <div id="operatorPanel" class="operator-panel hidden">
   <p class="operator-title">Booth Controls</p>
   <p class="operator-status" id="operatorStatus">Phase: hook (limit locked)</p>
+  <p class="operator-status" id="operatorForceStatus">Force-win: off</p>
+  <button class="operator-btn force" id="forceWinBtn">⚡ Force next win</button>
   <button class="operator-btn rig" id="startRiggingBtn">⚡ Start rigging now</button>
   <button class="operator-btn wipe" id="operatorResetBtn">↺ Reset everything</button>
   <label class="operator-check">
@@ -698,7 +710,8 @@ document.addEventListener('DOMContentLoaded', function(){
   const formatPeso = (n) => '₱' + Math.round(n).toLocaleString('en-PH');
 
   let state = { balance: START_BALANCE, round: 0, bet: null, guess: null, history: [],
-    instructorMode: false, over: false, grindStartRound: HOOK_ROUNDS, locked: true };
+    instructorMode: false, over: false, grindStartRound: HOOK_ROUNDS, locked: true,
+    forceNextWin: false };
 
   function computeProb(roundNum){
     if (roundNum <= state.grindStartRound) return HOOK_PROB;
@@ -734,6 +747,8 @@ document.addEventListener('DOMContentLoaded', function(){
   const resetBtn=$('resetBtn'), betNote=$('betNote');
   const operatorDot=$('operatorDot'), operatorPanel=$('operatorPanel'), operatorStatus=$('operatorStatus');
   const startRiggingBtn=$('startRiggingBtn'), operatorResetBtn=$('operatorResetBtn');
+  const forceWinBtn=$('forceWinBtn'), operatorForceStatus=$('operatorForceStatus');
+  const tapForceWin=$('tapForceWin'), tapStartRig=$('tapStartRig');
   const balanceModal=$('balanceModal'), startBalanceInput=$('startBalanceInput');
   const balanceModalWarning=$('balanceModalWarning'), startGameBtn=$('startGameBtn');
   const bonusModal=$('bonusModal'), bonusStartBtn=$('bonusStartBtn'), bonusBadge=$('bonusBadge');
@@ -809,6 +824,7 @@ document.addEventListener('DOMContentLoaded', function(){
   function updateOperatorStatus(){
     const inGrind = (state.round + 1) > state.grindStartRound;
     operatorStatus.textContent = 'Phase: ' + (inGrind ? 'rigged (unlocked)' : 'hook (limit locked)') + ' · round ' + state.round;
+    operatorForceStatus.textContent = 'Force-win: ' + (state.forceNextWin ? 'ARMED (next roll)' : 'off');
   }
 
   on(instructorToggle, 'change', () => {
@@ -822,7 +838,8 @@ document.addEventListener('DOMContentLoaded', function(){
     const phase = nextRound <= state.grindStartRound ? 'HOOK PHASE' : 'GRIND PHASE';
     const pity = pityBonus();
     const pityNote = pity > 0 ? ' (+' + Math.round(pity*100) + '% pity)' : '';
-    instructorPanel.textContent = 'Next roll — ' + phase + ' · true win prob: ' + Math.round(prob*100) + '%' + pityNote;
+    const forceNote = state.forceNextWin ? ' · ⚡ NEXT ROLL: FORCED WIN' : '';
+    instructorPanel.textContent = 'Next roll — ' + phase + ' · true win prob: ' + Math.round(prob*100) + '%' + pityNote + forceNote;
   }
 
   // ---------- streak / jackpot meter ----------
@@ -894,7 +911,10 @@ document.addEventListener('DOMContentLoaded', function(){
   function resolveRound(){
     state.round += 1;
     const prob = effectiveProb(state.round);
-    const win = Math.random() < prob;
+    // Operator override: a one-shot "force win" guarantees this roll, then clears itself.
+    const forced = state.forceNextWin;
+    const win = forced ? true : (Math.random() < prob);
+    state.forceNextWin = false;
     const desiredParity = win ? state.guess : (state.guess === 'odd' ? 'even' : 'odd');
     const [d1, d2] = rollForParity(desiredParity);
     const sum = d1 + d2, parity = (sum%2===0) ? 'even' : 'odd';
@@ -906,7 +926,7 @@ document.addEventListener('DOMContentLoaded', function(){
     if (state.balance < 0) state.balance = 0;
 
     state.history.push({ round: state.round, guess: state.guess, d1, d2, sum, parity, win, bet,
-      bonus: isBonus, trueProb: prob, balanceAfter: state.balance });
+      bonus: isBonus, trueProb: prob, forced: forced, balanceAfter: state.balance });
 
     resultLine.textContent = d1 + ' + ' + d2 + ' = ' + sum + ' (' + parity.toUpperCase() + ') — you ' +
       (win ? 'won ' + formatPeso(payout) + (isBonus ? ' (2× bonus!)' : '') : 'lost ' + formatPeso(bet));
@@ -1011,7 +1031,8 @@ document.addEventListener('DOMContentLoaded', function(){
 
   function resetGame(){
     state = { balance: START_BALANCE, round: 0, bet: null, guess: null, history: [],
-      instructorMode: instructorToggle.checked, over: false, grindStartRound: HOOK_ROUNDS, locked: true };
+      instructorMode: instructorToggle.checked, over: false, grindStartRound: HOOK_ROUNDS, locked: true,
+      forceNextWin: false };
     balanceValue.textContent = formatPeso(state.balance);
     roundValue.textContent = state.round;
     resultLine.textContent = 'Pick a bet size and a guess to begin.'; resultLine.className = 'result-line';
@@ -1037,6 +1058,22 @@ document.addEventListener('DOMContentLoaded', function(){
   on(resetBtn, 'click', restartGame);
 
   on(operatorDot, 'click', () => operatorPanel.classList.toggle('hidden'));
+
+  // Discreet acknowledgement: a faint 1s glow on the hidden dot. Meaningless to onlookers,
+  // it just confirms to the operator that a silent trigger fired.
+  function ackDot(){
+    operatorDot.classList.remove('acked');
+    void operatorDot.offsetWidth; // restart the animation
+    operatorDot.classList.add('acked');
+  }
+
+  // One-shot: arm the next roll as a guaranteed win, then it clears itself in resolveRound.
+  function armForceWin(){
+    if (state.over) return;
+    state.forceNextWin = true;
+    ackDot(); updateOperatorStatus(); updateInstructorPanel();
+  }
+
   function startRiggingNow(){
     if (state.over) return;
     state.grindStartRound = state.round;
@@ -1045,8 +1082,25 @@ document.addEventListener('DOMContentLoaded', function(){
     startRiggingBtn.textContent = '✓ Rigging started';
     setTimeout(() => startRiggingBtn.textContent = original, 1500);
   }
+  // Silent variant used by the discreet triggers — no visible panel, just the dot ack.
+  function startRiggingSilently(){ if (state.over) return; startRiggingNow(); ackDot(); }
+
+  on(forceWinBtn, 'click', armForceWin);
   on(startRiggingBtn, 'click', startRiggingNow);
   on(operatorResetBtn, 'click', restartGame);
+  on(tapForceWin, 'click', armForceWin);
+  on(tapStartRig, 'click', startRiggingSilently);
+
+  // Hidden keyboard shortcuts: w = arm force-win, g = start rigging. Ignored while typing
+  // in a field or with a modifier held, so they never fire by accident.
+  on(document, 'keydown', (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const t = e.target, tag = t && t.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || (t && t.isContentEditable)) return;
+    const k = e.key.toLowerCase();
+    if (k === 'w'){ armForceWin(); }
+    else if (k === 'g'){ startRiggingSilently(); }
+  });
 
   function readStartBalance(){ const v = parseInt(startBalanceInput.value,10); return (!isNaN(v)&&v>0)?v:null; }
   on(startBalanceInput, 'input', () => {
