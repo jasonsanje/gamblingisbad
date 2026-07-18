@@ -380,6 +380,16 @@
   .help-panel .disclaimer{ font-size:11.5px; color:var(--paper-dim); opacity:.75; border-top:1px solid rgba(255,255,255,.08); padding-top:10px; margin-top:14px; }
   .reset-btn{ display:block; margin:30px auto 0; padding:14px 26px; border-radius:10px; border:1px solid var(--gold); background:transparent; color:var(--gold-bright); font-weight:600; font-size:13px; letter-spacing:.05em; }
   .reset-btn:hover{ background:var(--gold); color:var(--ink-bg); }
+  .balance-report{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:0 0 26px; }
+  .balance-report-stat{ background:var(--ink-bg-2); border:1px solid rgba(255,255,255,.08); border-radius:10px; padding:18px 16px; text-align:center; }
+  .balance-report-stat .brs-label{ font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--paper-dim); margin:0 0 8px; }
+  .balance-report-stat .brs-value{ font-family:'Fraunces',serif; font-weight:700; font-size:clamp(22px,5vw,30px); line-height:1; color:var(--paper); margin:0; }
+  .balance-report-stat.outcome-loss{ border-left:3px solid var(--loss); }
+  .balance-report-stat.outcome-loss .brs-value{ color:var(--loss); }
+  .balance-report-stat.outcome-win{ border-left:3px solid var(--win); }
+  .balance-report-stat.outcome-win .brs-value{ color:var(--win); }
+  .balance-report-stat.outcome-even{ border-left:3px solid var(--gold); }
+  @media (max-width:560px){ .balance-report{ grid-template-columns:1fr; } }
 
   @media (prefers-reduced-motion: reduce){
     .die.rolling{ animation:none; }
@@ -550,6 +560,21 @@
       <span class="stamp">RIGGED</span>
       <h2>How This Game Was Rigged</h2>
       <p>Every roll above looked random. It wasn't. The dice were quietly steered so you'd win early, trust the game, and lose slowly once you were invested. Here's exactly how, round by round.</p>
+    </div>
+
+    <div class="balance-report" id="balanceReport">
+      <div class="balance-report-stat">
+        <p class="brs-label">You walked in with</p>
+        <p class="brs-value" id="brsStart">—</p>
+      </div>
+      <div class="balance-report-stat">
+        <p class="brs-label">You walked out with</p>
+        <p class="brs-value" id="brsEnd">—</p>
+      </div>
+      <div class="balance-report-stat" id="brsOutcomeStat">
+        <p class="brs-label" id="brsOutcomeLabel">The house took</p>
+        <p class="brs-value" id="brsOutcomeValue">—</p>
+      </div>
     </div>
 
     <div class="receipt">
