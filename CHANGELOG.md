@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Starting/ending balance report at the top of the reveal (truth) section. When the player
+  cashes out, three headline cards now summarize the session: "You walked in with ₱X", "You
+  walked out with ₱Y", and an outcome-aware bottom line — "The house took ₱(X−Y)" (red) on a
+  loss, "You came out ahead by ₱(Y−X)" (green) when the player finishes ahead, or "You broke
+  even ₱0" (neutral). The loss lands first, before the round-by-round ledger explains how.
 - Discreet operator controls for booth use, so the instructor never has to open the
   visible lower-right panel mid-demo (which onlookers could notice):
   - **One-shot force-win** — arms the *next* roll as a guaranteed win, then clears itself
