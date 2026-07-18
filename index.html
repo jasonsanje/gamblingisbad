@@ -1027,6 +1027,28 @@ document.addEventListener('DOMContentLoaded', function(){
       ledgerBody.appendChild(tr);
     });
   }
+
+  function buildBalanceReport(){
+    const start = Math.round(START_BALANCE), end = Math.round(state.balance);
+    $('brsStart').textContent = formatPeso(start);
+    $('brsEnd').textContent = formatPeso(end);
+    const stat = $('brsOutcomeStat'), label = $('brsOutcomeLabel'), value = $('brsOutcomeValue');
+    stat.classList.remove('outcome-loss','outcome-win','outcome-even');
+    if (end < start){
+      stat.classList.add('outcome-loss');
+      label.textContent = 'The house took';
+      value.textContent = formatPeso(start - end);
+    } else if (end > start){
+      stat.classList.add('outcome-win');
+      label.textContent = 'You came out ahead by';
+      value.textContent = formatPeso(end - start);
+    } else {
+      stat.classList.add('outcome-even');
+      label.textContent = 'You broke even';
+      value.textContent = formatPeso(0);
+    }
+  }
+
   function drawProbChart(){
     const ctx = probChart.getContext('2d');
     const w = probChart.width, h = probChart.height;
@@ -1046,6 +1068,7 @@ document.addEventListener('DOMContentLoaded', function(){
   }
   function revealTruth(){
     buildLedger();
+    buildBalanceReport();
     casinoStage.classList.add('hidden');
     truthStage.classList.remove('hidden');
     document.body.classList.add('truth-active');
